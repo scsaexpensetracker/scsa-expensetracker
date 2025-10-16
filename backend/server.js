@@ -47,7 +47,7 @@ app.use(
         store: sessionStore,
         name: 'connect.sid',
         cookie: {
-            secure: process.env.NODE_ENV === 'production',  // MUST be true for HTTPS
+            secure: process.env.NODE_ENV === 'production',  // true in production (HTTPS), false locally
             httpOnly: true,
             maxAge: 1000 * 60 * 60 * 24, // 24 hours
             sameSite: 'lax',  // Keep as 'lax' since same domain
@@ -57,10 +57,19 @@ app.use(
     })
 );
 
-// Log session after middleware
+// Enhanced logging middleware
 app.use((req, res, next) => {
     console.log('SessionID:', req.sessionID || 'None');
     console.log('Session userId:', req.session?.userId || 'None');
+    console.log('Set-Cookie will be:', res.getHeader('Set-Cookie') || 'None');
+    
+    // Log response headers after they're set
+    const oldWriteHead = res.writeHead;
+    res.writeHead = function(...args) {
+        console.log('Response Set-Cookie:', res.getHeader('Set-Cookie') || 'None sent');
+        return oldWriteHead.apply(res, args);
+    };
+    
     next();
 });
 

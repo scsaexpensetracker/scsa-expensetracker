@@ -99,6 +99,7 @@ module.exports = (sessionStore) => {
                     }
 
                     console.log('Login - Session saved successfully');
+                    console.log('Login - Set-Cookie header:', res.getHeader('Set-Cookie'));
 
                     // Return user data
                     res.json({
@@ -159,7 +160,7 @@ module.exports = (sessionStore) => {
         }
     });
 
-    // Logout
+    // Logout - FIXED
     router.post('/logout', (req, res) => {
         console.log('=== LOGOUT ===');
         console.log('SessionID:', req.sessionID);
@@ -169,7 +170,7 @@ module.exports = (sessionStore) => {
                 console.error('Logout error:', err);
                 return res.status(500).json({ message: 'Logout failed' });
             }
-            res.clearCookie('sessionId'); // Clear the cookie
+            res.clearCookie('connect.sid', { path: '/' }); // FIXED: Use correct cookie name
             console.log('Session destroyed successfully');
             res.json({ message: 'Logout successful' });
         });
