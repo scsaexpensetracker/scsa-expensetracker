@@ -47,11 +47,12 @@ app.use(
         store: sessionStore,
         name: 'connect.sid',
         cookie: {
-            secure: process.env.NODE_ENV === 'production',  // true in production (HTTPS), false locally
+            secure: process.env.NODE_ENV === 'production',  // MUST be true for HTTPS
             httpOnly: true,
             maxAge: 1000 * 60 * 60 * 24, // 24 hours
-            sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+            sameSite: 'lax',  // Keep as 'lax' since same domain
             path: '/',
+            domain: process.env.NODE_ENV === 'production' ? undefined : 'localhost'  // Let browser set domain in production
         }
     })
 );
