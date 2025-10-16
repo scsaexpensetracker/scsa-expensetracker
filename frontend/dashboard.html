@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - SCSA Financial Management</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="dashboard-page">
+    <div class="dashboard-wrapper">
+        <!-- SIDEBAR -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2>SCSA FM</h2>
+                <p id="userRole">Loading...</p>
+            </div>
+            
+            <ul class="sidebar-menu">
+                <li><a href="#" class="menu-link active" data-section="overview">Dashboard</a></li>
+                <li><a href="#" class="menu-link" data-section="tuition">Tuition Fees</a></li>
+                <li><a href="#" class="menu-link" data-section="events">Events & Contributions</a></li>
+                <li><a href="#" class="menu-link" data-section="uniforms">Uniforms & Books</a></li>
+                <li><a href="#" class="menu-link" data-section="payments">Payment History</a></li>
+                <li><a href="#" class="menu-link" data-section="notifications">Notifications</a></li>
+                <li id="adminMenuLink" style="display: none;">
+                    <a href="#" class="menu-link" data-section="admin">Admin Panel</a>
+                </li>
+            </ul>
+            
+            <div class="logout-btn">
+                <button class="btn-logout" onclick="logout()">Logout</button>
+            </div>
+        </aside>
+        
+        <!-- MAIN CONTENT -->
+        <main class="main-content">
+            <!-- TOP BAR -->
+            <div class="top-bar">
+                <h1>Financial Management System</h1>
+                <div class="user-info">
+                    <p>Logged in as:</p>
+                    <strong id="currentUsername">User</strong>
+                </div>
+            </div>
+            
+            <!-- OVERVIEW SECTION -->
+            <section id="overview" class="content-section active">
+                <div class="dashboard-grid">
+                    <div class="stat-card tuition">
+                        <div class="stat-label">Total Tuition Balance</div>
+                        <div class="stat-value" id="totalTuitionBalance">₱0.00</div>
+                        <div class="stat-meta" id="tuitionStatus">No data</div>
+                    </div>
+                    
+                    <div class="stat-card events">
+                        <div class="stat-label">Total Event Contributions</div>
+                        <div class="stat-value" id="totalEventBalance">₱0.00</div>
+                        <div class="stat-meta" id="eventStatus">No data</div>
+                    </div>
+                    
+                    <div class="stat-card uniforms">
+                        <div class="stat-label">Total Uniforms & Books</div>
+                        <div class="stat-value" id="totalUniformBalance">₱0.00</div>
+                        <div class="stat-meta" id="uniformStatus">No data</div>
+                    </div>
+                </div>
+                
+                <div id="notificationsContainer"></div>
+                
+                <div class="table-container">
+                    <div class="table-header">
+                        <h3>Recent Transactions</h3>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Description</th>
+                                <th>Type</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recentTransactionsBody">
+                            <tr>
+                                <td colspan="5" style="text-align: center; color: #999;">No transactions yet</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+            
+            <!-- TUITION SECTION -->
+            <section id="tuition" class="content-section">
+                <div class="table-container">
+                    <div class="table-header">
+                        <h3>Tuition Fee Details</h3>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Item</th>
+                                <th>Total Amount</th>
+                                <th>Amount Paid</th>
+                                <th>Balance</th>
+                                <th>Due Date</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tuitionTableBody">
+                            <tr>
+                                <td colspan="6" style="text-align: center; color: #999;">No tuition data</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+            
+            <!-- EVENTS SECTION -->
+            <section id="events" class="content-section">
+                <div class="table-container">
+                    <div class="table-header">
+                        <h3>Events & Contributions</h3>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Event Name</th>
+                                <th>Contribution Amount</th>
+                                <th>Amount Paid</th>
+                                <th>Balance</th>
+                                <th>Due Date</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="eventsTableBody">
+                            <tr>
+                                <td colspan="6" style="text-align: center; color: #999;">No event data</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+            
+            <!-- UNIFORMS SECTION -->
+            <section id="uniforms" class="content-section">
+                <div class="table-container">
+                    <div class="table-header">
+                        <h3>Uniforms & Learning Materials</h3>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Item</th>
+                                <th>Cost</th>
+                                <th>Amount Paid</th>
+                                <th>Balance</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="uniformsTableBody">
+                            <tr>
+                                <td colspan="5" style="text-align: center; color: #999;">No uniform data</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+            
+            <!-- PAYMENT HISTORY SECTION -->
+            <section id="payments" class="content-section">
+                <div class="table-container">
+                    <div class="table-header">
+                        <h3>Complete Payment History</h3>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Description</th>
+                                <th>Type</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                                <th>Receipt</th>
+                            </tr>
+                        </thead>
+                        <tbody id="paymentHistoryBody">
+                            <tr>
+                                <td colspan="6" style="text-align: center; color: #999;">No payment history</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+            
+            <!-- NOTIFICATIONS SECTION -->
+            <section id="notifications" class="content-section">
+                <h2 style="margin-bottom: 20px;">Announcements & Reminders</h2>
+                <div id="notificationsDetailContainer"></div>
+            </section>
+            
+            <!-- ADMIN SECTION -->
+            <section id="admin" class="content-section admin-section">
+                <h2 style="margin-bottom: 20px;">Admin Panel - Data Management</h2>
+                
+                <div class="form-container" style="margin-bottom: 30px;">
+                    <h3 style="margin-bottom: 20px;">Add Student Data</h3>
+                    <form id="adminForm">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Student Name</label>
+                                <input type="text" id="adminStudentName" placeholder="Enter student name" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Grade</label>
+                                <input type="text" id="adminGrade" placeholder="e.g., Grade 12" required>
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Tuition Amount</label>
+                                <input type="number" id="adminTuition" placeholder="0.00" min="0" step="0.01" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Amount Paid</label>
+                                <input type="number" id="adminTuitionPaid" placeholder="0.00" min="0" step="0.01" required>
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Tuition Due Date</label>
+                                <input type="date" id="adminTuitionDue" required>
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Event Contribution Total</label>
+                                <input type="number" id="adminEventTotal" placeholder="0.00" min="0" step="0.01" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Event Amount Paid</label>
+                                <input type="number" id="adminEventPaid" placeholder="0.00" min="0" step="0.01" required>
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Uniform & Books Total</label>
+                                <input type="number" id="adminUniformTotal" placeholder="0.00" min="0" step="0.01" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Uniform Amount Paid</label>
+                                <input type="number" id="adminUniformPaid" placeholder="0.00" min="0" step="0.01" required>
+                            </div>
+                        </div>
+                        
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">Save Student Data</button>
+                            <button type="reset" class="btn btn-secondary">Clear Form</button>
+                        </div>
+                    </form>
+                </div>
+                
+                <div class="table-container">
+                    <div class="table-header">
+                        <h3>All Students Data</h3>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Student Name</th>
+                                <th>Grade</th>
+                                <th>Tuition Balance</th>
+                                <th>Event Balance</th>
+                                <th>Uniform Balance</th>
+                                <th>Total Balance</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminStudentsTableBody">
+                            <tr>
+                                <td colspan="7" style="text-align: center; color: #999;">No student data</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
+    
+    <script src="auth.js"></script>
+    <script src="dashboard.js"></script>
+</body>
+</html>

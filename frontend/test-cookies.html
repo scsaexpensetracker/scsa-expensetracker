@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cookie Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 10px 5px;
+            cursor: pointer;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        #results {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f5f5f5;
+            border-radius: 4px;
+            white-space: pre-wrap;
+            font-family: monospace;
+        }
+        .error {
+            color: red;
+        }
+        .success {
+            color: green;
+        }
+    </style>
+</head>
+<body>
+    <h1>Cookie & CORS Diagnostic Tool</h1>
+    
+    <div>
+        <h3>Current Info:</h3>
+        <p><strong>Origin:</strong> <span id="origin"></span></p>
+        <p><strong>Cookies:</strong> <span id="cookies"></span></p>
+    </div>
+
+    <div>
+        <button onclick="testCORS()">Test CORS</button>
+        <button onclick="testLogin()">Test Login</button>
+        <button onclick="testSession()">Test Session Check</button>
+        <button onclick="clearResults()">Clear Results</button>
+    </div>
+
+    <div id="results"></div>
+
+    <script>
+        const API_URL = 'http://localhost:5000/api';
+
+        // Display current info
+        document.getElementById('origin').textContent = window.location.origin;
+        document.getElementById('cookies').textContent = document.cookie || 'None';
+
+        function log(message, type = 'info') {
+            const results = document.getElementById('results');
+            const className = type === 'error' ? 'error' : type === 'success' ? 'success' : '';
+            results.innerHTML += `<div class="${className}">${new Date().toLocaleTimeString()}: ${message}</div>`;
+        }
+
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+        }
+
+        async function testCORS() {
+            log('Testing CORS configuration...');
+            try {
+                const response = await fetch(`http://localhost:5000/`, {
+                    credentials: 'include'
+                });
+                const data = await response.json();
+                log('CORS test successful: ' + JSON.stringify(data), 'success');
+            } catch (error) {
+                log('CORS test failed: ' + error.message, 'error');
+            }
+        }
+
+        async function testLogin() {
+            log('Testing login with admin credentials...');
+            try {
+                const response = await fetch(`${API_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({ 
+                        username: 'admin', 
+                        password: 'admin123' 
+                    })
+                });
+
+                log('Response status: ' + response.status);
+                log('Response headers: ' + JSON.stringify([...response.headers.entries()]));
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    log('Login successful!', 'success');
+                    log('User: ' + JSON.stringify(data.user, null, 2), 'success');
+                    
+                    // Check cookies after login
+                    setTimeout(() => {
+                        log('Cookies after login: ' + document.cookie);
+                        document.getElementById('cookies').textContent = document.cookie || 'None';
+                    }, 100);
+                } else {
+                    log('Login failed: ' + data.message, 'error');
+                }
+            } catch (error) {
+                log('Login test failed: ' + error.message, 'error');
+            }
+        }
+
+        async function testSession() {
+            log('Testing session check...');
+            log('Current cookies: ' + document.cookie);
+            try {
+                const response = await fetch(`${API_URL}/auth/check-session`, {
+                    method: 'GET',
+                    credentials: 'include',
+                    headers: {
+                        'Accept': 'application/json',
+                    },
+                });
+
+                log('Response status: ' + response.status);
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    log('Session check successful!', 'success');
+                    log('User: ' + JSON.stringify(data.user, null, 2), 'success');
+                } else {
+                    log('Session check failed: ' + data.message, 'error');
+                }
+            } catch (error) {
+                log('Session check test failed: ' + error.message, 'error');
+            }
+        }
+    </script>
+</body>
+</html>
