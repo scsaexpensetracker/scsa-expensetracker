@@ -47,10 +47,10 @@ app.use(
         store: sessionStore,
         name: 'connect.sid',
         cookie: {
-            secure: false,           // false for HTTP (localhost)
+            secure: process.env.NODE_ENV === 'production',  // true in production (HTTPS), false locally
             httpOnly: true,
             maxAge: 1000 * 60 * 60 * 24, // 24 hours
-            sameSite: 'lax',
+            sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
             path: '/',
         }
     })

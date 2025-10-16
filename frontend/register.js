@@ -1,4 +1,4 @@
-const API_URL = process.env.REACT_APP_API_URL || '/api';
+const API_URL = '/api';
 
 document.getElementById('registerForm').addEventListener('submit', async (e) => {
     e.preventDefault();

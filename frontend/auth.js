@@ -1,4 +1,4 @@
-const API_URL = process.env.REACT_APP_API_URL || '/api';
+const API_URL = '/api';
 
 // Check if user is already logged in (only on login page)
 if (window.location.pathname.includes('index.html') || window.location.pathname === '/' || window.location.pathname.endsWith('/')) {
