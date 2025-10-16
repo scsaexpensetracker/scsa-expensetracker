@@ -9,6 +9,10 @@ const connectDB = require('./config/db');
 
 const app = express();
 
+// CRITICAL: Trust proxy for Render (and other reverse proxies)
+// This is required for secure cookies to work on HTTPS behind a proxy
+app.set('trust proxy', 1);
+
 // Connect to MongoDB
 connectDB();
 
