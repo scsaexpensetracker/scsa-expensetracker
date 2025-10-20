@@ -3,11 +3,8 @@ import {
   Bell, 
   Search, 
   Filter, 
-  Edit, 
-  Trash2, 
   AlertCircle,
   CheckCircle,
-  X,
   Mail,
   MailOpen,
   AlertTriangle,
@@ -15,6 +12,8 @@ import {
 } from 'lucide-react';
 import axios from 'axios';
 import './Notifications.css';
+
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
 const Notifications = ({ user }) => {
   const [notifications, setNotifications] = useState([]);
@@ -28,21 +27,6 @@ const Notifications = ({ user }) => {
     type: '',
     priority: '',
     isRead: '',
-    school_year: ''
-  });
-
-  const [showModal, setShowModal] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [currentNotification, setCurrentNotification] = useState(null);
-  const [notificationToDelete, setNotificationToDelete] = useState(null);
-
-  const [formData, setFormData] = useState({
-    LRN: '',
-    title: '',
-    message: '',
-    type: '',
-    priority: 'Medium',
-    related_module: 'General',
     school_year: ''
   });
 
@@ -60,8 +44,8 @@ const Notifications = ({ user }) => {
     try {
       setLoading(true);
       const url = isAdmin 
-        ? 'http://localhost:5000/notifications' 
-        : `http://localhost:5000/notifications/student/${user.LRN}`;
+        ? `${API_URL}/notifications` 
+        : `${API_URL}/notifications/student/${user.LRN}`;
       const response = await axios.get(url);
       setNotifications(response.data);
       setFilteredNotifications(response.data);
@@ -119,65 +103,9 @@ const Notifications = ({ user }) => {
     });
   };
 
-  const handleInputChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
-  };
-
-  const handleEdit = (notification) => {
-    setCurrentNotification(notification);
-    setFormData({
-      LRN: notification.LRN?.LRN || notification.LRN,
-      title: notification.title,
-      message: notification.message,
-      type: notification.type,
-      priority: notification.priority,
-      related_module: notification.related_module,
-      school_year: notification.school_year
-    });
-    setShowModal(true);
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      if (currentNotification) {
-        await axios.put(`http://localhost:5000/notifications/${currentNotification._id}`, formData);
-        setSuccess('Notification updated successfully');
-      }
-      fetchNotifications();
-      setShowModal(false);
-      setTimeout(() => setSuccess(''), 3000);
-    } catch (err) {
-      setError(err.response?.data?.message || 'Failed to save notification');
-      setTimeout(() => setError(''), 3000);
-    }
-  };
-
-  const handleDeleteClick = (notification) => {
-    setNotificationToDelete(notification);
-    setShowDeleteModal(true);
-  };
-
-  const handleDeleteConfirm = async () => {
-    try {
-      await axios.delete(`http://localhost:5000/notifications/${notificationToDelete._id}`);
-      setSuccess('Notification deleted successfully');
-      fetchNotifications();
-      setShowDeleteModal(false);
-      setNotificationToDelete(null);
-      setTimeout(() => setSuccess(''), 3000);
-    } catch (err) {
-      setError('Failed to delete notification');
-      setTimeout(() => setError(''), 3000);
-    }
-  };
-
   const handleMarkAsRead = async (notificationId) => {
     try {
-      await axios.patch(`http://localhost:5000/notifications/${notificationId}/read`);
+      await axios.patch(`${API_URL}/notifications/${notificationId}/read`);
       fetchNotifications();
     } catch (err) {
       setError('Failed to mark as read');
@@ -187,7 +115,7 @@ const Notifications = ({ user }) => {
 
   const handleMarkAllAsRead = async () => {
     try {
-      await axios.patch(`http://localhost:5000/notifications/mark-all-read/${user.LRN}`);
+      await axios.patch(`${API_URL}/notifications/mark-all-read/${user.LRN}`);
       setSuccess('All notifications marked as read');
       fetchNotifications();
       setTimeout(() => setSuccess(''), 3000);
@@ -401,187 +329,12 @@ const Notifications = ({ user }) => {
                         <CheckCircle size={16} />
                       </button>
                     )}
-                    {isAdmin && (
-                      <>
-                        <button
-                          className="notif-action-btn notif-action-btn-edit"
-                          onClick={() => handleEdit(notification)}
-                          title="Edit"
-                        >
-                          <Edit size={16} />
-                        </button>
-                        <button
-                          className="notif-action-btn notif-action-btn-delete"
-                          onClick={() => handleDeleteClick(notification)}
-                          title="Delete"
-                        >
-                          <Trash2 size={16} />
-                        </button>
-                      </>
-                    )}
                   </div>
                 </div>
               ))}
             </div>
           )}
         </div>
-
-        {/* Edit Modal */}
-        {showModal && (
-          <div className="notif-modal-overlay">
-            <div className="notif-modal">
-              <div className="notif-modal-header">
-                <h3>Edit Notification</h3>
-                <button className="notif-modal-close" onClick={() => setShowModal(false)}>
-                  <X size={20} />
-                </button>
-              </div>
-              <form onSubmit={handleSubmit}>
-                <div className="notif-modal-body">
-                  <div className="notif-form-group">
-                    <label>LRN *</label>
-                    <input
-                      type="text"
-                      name="LRN"
-                      value={formData.LRN}
-                      onChange={handleInputChange}
-                      required
-                      disabled
-                    />
-                  </div>
-
-                  <div className="notif-form-group">
-                    <label>Title *</label>
-                    <input
-                      type="text"
-                      name="title"
-                      value={formData.title}
-                      onChange={handleInputChange}
-                      required
-                    />
-                  </div>
-
-                  <div className="notif-form-group">
-                    <label>Message *</label>
-                    <textarea
-                      name="message"
-                      value={formData.message}
-                      onChange={handleInputChange}
-                      rows="4"
-                      required
-                    />
-                  </div>
-
-                  <div className="notif-form-row">
-                    <div className="notif-form-group">
-                      <label>Type *</label>
-                      <select
-                        name="type"
-                        value={formData.type}
-                        onChange={handleInputChange}
-                        required
-                      >
-                        <option value="">Select Type</option>
-                        <option value="Payment Reminder">Payment Reminder</option>
-                        <option value="Due Date">Due Date</option>
-                        <option value="Balance Alert">Balance Alert</option>
-                        <option value="General Announcement">General Announcement</option>
-                        <option value="Event Reminder">Event Reminder</option>
-                      </select>
-                    </div>
-
-                    <div className="notif-form-group">
-                      <label>Priority *</label>
-                      <select
-                        name="priority"
-                        value={formData.priority}
-                        onChange={handleInputChange}
-                        required
-                      >
-                        <option value="Low">Low</option>
-                        <option value="Medium">Medium</option>
-                        <option value="High">High</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  <div className="notif-form-row">
-                    <div className="notif-form-group">
-                      <label>Related Module *</label>
-                      <select
-                        name="related_module"
-                        value={formData.related_module}
-                        onChange={handleInputChange}
-                        required
-                      >
-                        <option value="General">General</option>
-                        <option value="Tuition Fees">Tuition Fees</option>
-                        <option value="Events">Events</option>
-                        <option value="Uniforms & Books">Uniforms & Books</option>
-                      </select>
-                    </div>
-
-                    <div className="notif-form-group">
-                      <label>School Year *</label>
-                      <input
-                        type="text"
-                        name="school_year"
-                        value={formData.school_year}
-                        onChange={handleInputChange}
-                        placeholder="e.g., 2024-2025"
-                        required
-                      />
-                    </div>
-                  </div>
-                </div>
-                <div className="notif-modal-actions">
-                  <button
-                    type="button"
-                    className="notif-modal-btn notif-modal-btn-cancel"
-                    onClick={() => setShowModal(false)}
-                  >
-                    Cancel
-                  </button>
-                  <button type="submit" className="notif-modal-btn notif-modal-btn-save">
-                    Update
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
-
-        {/* Delete Modal */}
-        {showDeleteModal && (
-          <div className="notif-modal-overlay">
-            <div className="notif-modal">
-              <div className="notif-modal-header">
-                <h3>Confirm Delete</h3>
-                <button className="notif-modal-close" onClick={() => setShowDeleteModal(false)}>
-                  <X size={20} />
-                </button>
-              </div>
-              <div className="notif-modal-body">
-                <p>Are you sure you want to delete this notification?</p>
-                <p className="notif-modal-warning">This action cannot be undone.</p>
-              </div>
-              <div className="notif-modal-actions">
-                <button
-                  className="notif-modal-btn notif-modal-btn-cancel"
-                  onClick={() => setShowDeleteModal(false)}
-                >
-                  Cancel
-                </button>
-                <button
-                  className="notif-modal-btn notif-modal-btn-delete"
-                  onClick={handleDeleteConfirm}
-                >
-                  Delete
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );

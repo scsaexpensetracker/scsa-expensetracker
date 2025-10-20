@@ -4,7 +4,8 @@ const paymentHistorySchema = new mongoose.Schema({
   LRN: {
     type: String,
     required: true,
-    ref: 'User'
+    ref: 'User',
+    refPath: 'LRN'
   },
   payment_type: {
     type: String,

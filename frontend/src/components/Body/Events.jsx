@@ -14,6 +14,8 @@ import {
 import axios from 'axios';
 import './Events.css';
 
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+
 const Events = ({ user }) => {
   const [events, setEvents] = useState([]);
   const [filteredEvents, setFilteredEvents] = useState([]);
@@ -58,8 +60,8 @@ const Events = ({ user }) => {
     try {
       setLoading(true);
       const url = isAdmin 
-        ? 'http://localhost:5000/events' 
-        : `http://localhost:5000/events/student/${user.LRN}`;
+        ? `${API_URL}/events` 
+        : `${API_URL}/events/student/${user.LRN}`;
       const response = await axios.get(url);
       setEvents(response.data);
       setFilteredEvents(response.data);
@@ -149,10 +151,10 @@ const Events = ({ user }) => {
     e.preventDefault();
     try {
       if (currentEvent) {
-        await axios.put(`http://localhost:5000/events/${currentEvent._id}`, formData);
+        await axios.put(`${API_URL}/events/${currentEvent._id}`, formData);
         setSuccess('Event updated successfully');
       } else {
-        await axios.post('http://localhost:5000/events', formData);
+        await axios.post(`${API_URL}/events`, formData);
         setSuccess('Event created successfully');
       }
       fetchEvents();
@@ -171,7 +173,7 @@ const Events = ({ user }) => {
 
   const handleDeleteConfirm = async () => {
     try {
-      await axios.delete(`http://localhost:5000/events/${eventToDelete._id}`);
+      await axios.delete(`${API_URL}/events/${eventToDelete._id}`);
       setSuccess('Event deleted successfully');
       fetchEvents();
       setShowDeleteModal(false);

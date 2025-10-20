@@ -2,12 +2,11 @@
   position: sticky;
   top: 0;
   z-index: 100;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 /* Top Bar */
 .navbar-top-bar {
-  background: linear-gradient(135deg, #4a148c 0%, #7b1fa2 100%);
+  background: #5789c2;
   color: white;
   padding: 0.75rem 0;
 }
@@ -76,18 +75,11 @@
   gap: 1rem;
 }
 
-.navbar-logo-circle {
+.navbar-logo-image {
   width: 50px;
   height: 50px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-weight: 700;
-  font-size: 0.875rem;
-  box-shadow: 0 4px 6px rgba(102, 126, 234, 0.3);
+  object-fit: cover;
 }
 
 .navbar-title h1 {
@@ -128,7 +120,7 @@
 }
 
 .navbar-logout-btn {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #667eea;
   color: white;
   border: none;
   padding: 0.625rem 1.25rem;
@@ -136,12 +128,6 @@
   font-weight: 600;
   font-size: 0.875rem;
   cursor: pointer;
-  transition: transform 0.2s, box-shadow 0.2s;
-}
-
-.navbar-logout-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
 }
 
 /* Mobile Menu Button */
@@ -169,7 +155,7 @@
     font-size: 0.7rem;
   }
 
-  .navbar-logo-circle {
+  .navbar-logo-image {
     width: 45px;
     height: 45px;
   }
@@ -203,10 +189,9 @@
     font-size: 0.65rem;
   }
 
-  .navbar-logo-circle {
+  .navbar-logo-image {
     width: 40px;
     height: 40px;
-    font-size: 0.75rem;
   }
 
   .navbar-links-desktop {
@@ -245,7 +230,7 @@
   }
 
   .navbar-logout-btn-mobile {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: #667eea;
     color: white;
     border: none;
     padding: 0.75rem 1rem;

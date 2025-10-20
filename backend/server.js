@@ -79,9 +79,8 @@ mongoose.connect(mongoUri, {
 // Serve frontend build (React)
 app.use(express.static(path.join(__dirname, '../frontend/build')));
 
-// Catch-all route for React Router
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '../frontend/build', 'index.html'));
+app.use((req, res, next) => {
+  res.sendFile(path.join(__dirname, '../frontend/build/index.html'));
 });
 
 // Start Server

@@ -5,6 +5,8 @@ import './Login.css';
 import SCSA_LOGO from '../SCSA/SCSA_Logo.jpg';
 import SCSA_HS from '../SCSA/HS.JPG';
 
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+
 const Login = ({ onLogin }) => {
   const [formData, setFormData] = useState({
     LRN: '',
@@ -27,7 +29,7 @@ const Login = ({ onLogin }) => {
     setLoading(true);
 
     try {
-      const response = await axios.post('http://localhost:5000/auth/login', formData);
+      const response = await axios.post(`${API_URL}/auth/login`, formData);
       
       if (response.data.user) {
         onLogin(response.data.user);

@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Menu, X, User, GraduationCap } from 'lucide-react';
+import { Menu, X, User } from 'lucide-react';
 import './Navbar.css';
+import SCSA_LOGO from '../SCSA/SCSA_Logo.jpg';
 
 const Navbar = ({ user, onLogout }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -78,9 +79,7 @@ const Navbar = ({ user, onLogout }) => {
           <div className="navbar-content">
             {/* Logo and Title */}
             <div className="navbar-logo">
-              <div className="navbar-logo-circle">
-                <GraduationCap size={24} />
-              </div>
+              <img src={SCSA_LOGO} alt="SCSA Logo" className="navbar-logo-image" />
               <div className="navbar-title">
                 <h1>St. Catherine of Siena Academy</h1>
                 <p className="navbar-subtitle">Samal, Bataan - Financial Management Portal</p>

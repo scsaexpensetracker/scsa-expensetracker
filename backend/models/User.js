@@ -35,11 +35,12 @@ const userSchema = new mongoose.Schema({
   section: {
     type: String,
     required: true,
-    enum: ['Section 1', 'Section 2', 'Section 3', 'Section 4']
+    enum: ['Virgen Del Rosario', 'Virgen Del Pilar', 'Virgen Del Carmen']
   },
   strand: {
     type: String,
     required: true,
+    enum: ['STEM', 'ABM', 'HUMSS'],
     trim: true
   },
   school_year: {

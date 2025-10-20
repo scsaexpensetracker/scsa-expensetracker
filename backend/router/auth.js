@@ -93,4 +93,57 @@ router.post('/register', async (req, res) => {
   }
 });
 
+// Update Profile Route
+router.patch('/profile/:LRN', async (req, res) => {
+  try {
+    const { LRN } = req.params;
+    const { firstname, middlename, lastname, address, contactnumber, password } = req.body;
+
+    // Find user by LRN
+    const user = await User.findOne({ LRN });
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Update only provided fields
+    const updateData = {};
+    if (firstname) updateData.firstname = firstname;
+    if (middlename) updateData.middlename = middlename;
+    if (lastname) updateData.lastname = lastname;
+    if (address) updateData.address = address;
+    if (contactnumber) updateData.contactnumber = contactnumber;
+    if (password) updateData.password = password;
+
+    // Update user in database
+    const updatedUser = await User.findOneAndUpdate(
+      { LRN },
+      { $set: updateData },
+      { new: true, runValidators: true }
+    );
+
+    // Return updated user data without password
+    const userData = {
+      LRN: updatedUser.LRN,
+      firstname: updatedUser.firstname,
+      middlename: updatedUser.middlename,
+      lastname: updatedUser.lastname,
+      address: updatedUser.address,
+      gradelevel: updatedUser.gradelevel,
+      section: updatedUser.section,
+      strand: updatedUser.strand,
+      school_year: updatedUser.school_year,
+      contactnumber: updatedUser.contactnumber,
+      role: updatedUser.role
+    };
+
+    res.json({
+      message: 'Profile updated successfully',
+      user: userData
+    });
+  } catch (error) {
+    console.error('Profile update error:', error);
+    res.status(500).json({ message: 'Server error during profile update' });
+  }
+});
+
 export default router;

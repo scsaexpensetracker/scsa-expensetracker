@@ -22,10 +22,21 @@ router.get('/', async (req, res) => {
       if (end_date) filter.payment_date.$lte = new Date(end_date);
     }
 
-    const payments = await PaymentHistory.find(filter)
-      .populate('LRN', 'firstname middlename lastname gradelevel section')
-      .sort({ payment_date: -1 });
-    res.json(payments);
+    // Get payments first
+    const payments = await PaymentHistory.find(filter).sort({ payment_date: -1 }).lean();
+    
+    // Manually populate student data
+    const paymentsWithStudents = await Promise.all(
+      payments.map(async (payment) => {
+        const student = await User.findOne({ LRN: payment.LRN }).select('LRN firstname middlename lastname gradelevel section');
+        return {
+          ...payment,
+          LRN: student || { LRN: payment.LRN }
+        };
+      })
+    );
+
+    res.json(paymentsWithStudents);
   } catch (error) {
     console.error('Error fetching payment history:', error);
     res.status(500).json({ message: 'Server error fetching payment history' });
@@ -36,8 +47,18 @@ router.get('/', async (req, res) => {
 router.get('/student/:lrn', async (req, res) => {
   try {
     const payments = await PaymentHistory.find({ LRN: req.params.lrn })
-      .sort({ payment_date: -1 });
-    res.json(payments);
+      .sort({ payment_date: -1 })
+      .lean();
+    
+    // Optionally add student info
+    const student = await User.findOne({ LRN: req.params.lrn }).select('LRN firstname middlename lastname gradelevel section');
+    
+    const paymentsWithStudent = payments.map(payment => ({
+      ...payment,
+      LRN: student || { LRN: payment.LRN }
+    }));
+
+    res.json(paymentsWithStudent);
   } catch (error) {
     console.error('Error fetching payment history:', error);
     res.status(500).json({ message: 'Server error fetching payment history' });

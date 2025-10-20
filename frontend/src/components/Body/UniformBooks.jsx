@@ -13,6 +13,8 @@ import {
 import axios from 'axios';
 import './UniformBooks.css';
 
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+
 const UniformsBooks = ({ user }) => {
   const [items, setItems] = useState([]);
   const [filteredItems, setFilteredItems] = useState([]);
@@ -57,13 +59,13 @@ const UniformsBooks = ({ user }) => {
     try {
       setLoading(true);
       const url = isAdmin 
-        ? 'http://localhost:5000/uniforms-books' 
-        : `http://localhost:5000/uniforms-books/student/${user.LRN}`;
+        ? `${API_URL}/uniforms-books` 
+        : `${API_URL}/uniforms-books/student/${user.LRN}`;
       const response = await axios.get(url);
       setItems(response.data);
       setFilteredItems(response.data);
     } catch (err) {
-      setError('Failed to fetch items');
+      setError(err.response?.data?.message || 'Failed to fetch items');
       console.error(err);
     } finally {
       setLoading(false);
@@ -151,10 +153,10 @@ const UniformsBooks = ({ user }) => {
     e.preventDefault();
     try {
       if (currentItem) {
-        await axios.put(`http://localhost:5000/uniforms-books/${currentItem._id}`, formData);
+        await axios.put(`${API_URL}/uniforms-books/${currentItem._id}`, formData);
         setSuccess('Item updated successfully');
       } else {
-        await axios.post('http://localhost:5000/uniforms-books', formData);
+        await axios.post(`${API_URL}/uniforms-books`, formData);
         setSuccess('Item created successfully');
       }
       fetchItems();
@@ -173,14 +175,14 @@ const UniformsBooks = ({ user }) => {
 
   const handleDeleteConfirm = async () => {
     try {
-      await axios.delete(`http://localhost:5000/uniforms-books/${itemToDelete._id}`);
+      await axios.delete(`${API_URL}/uniforms-books/${itemToDelete._id}`);
       setSuccess('Item deleted successfully');
       fetchItems();
       setShowDeleteModal(false);
       setItemToDelete(null);
       setTimeout(() => setSuccess(''), 3000);
     } catch (err) {
-      setError('Failed to delete item');
+      setError(err.response?.data?.message || 'Failed to delete item');
       setTimeout(() => setError(''), 3000);
     }
   };
@@ -405,120 +407,118 @@ const UniformsBooks = ({ user }) => {
                   <X size={20} />
                 </button>
               </div>
-              <form onSubmit={handleSubmit}>
-                <div className="ub-modal-body">
+              <div className="ub-modal-body">
+                <div className="ub-form-group">
+                  <label>LRN *</label>
+                  <input
+                    type="text"
+                    name="LRN"
+                    value={formData.LRN}
+                    onChange={handleInputChange}
+                    required
+                    disabled={currentItem}
+                  />
+                </div>
+
+                <div className="ub-form-group">
+                  <label>Item Type *</label>
+                  <select
+                    name="item_type"
+                    value={formData.item_type}
+                    onChange={handleInputChange}
+                    required
+                  >
+                    <option value="">Select Item Type</option>
+                    <option value="Uniform">Uniform</option>
+                    <option value="Book">Book</option>
+                    <option value="Laboratory Materials">Laboratory Materials</option>
+                    <option value="Others">Others</option>
+                  </select>
+                </div>
+
+                <div className="ub-form-group">
+                  <label>Item Name *</label>
+                  <input
+                    type="text"
+                    name="item_name"
+                    value={formData.item_name}
+                    onChange={handleInputChange}
+                    required
+                  />
+                </div>
+
+                <div className="ub-form-row">
                   <div className="ub-form-group">
-                    <label>LRN *</label>
-                    <input
-                      type="text"
-                      name="LRN"
-                      value={formData.LRN}
-                      onChange={handleInputChange}
-                      required
-                      disabled={currentItem}
-                    />
-                  </div>
-
-                  <div className="ub-form-group">
-                    <label>Item Type *</label>
-                    <select
-                      name="item_type"
-                      value={formData.item_type}
-                      onChange={handleInputChange}
-                      required
-                    >
-                      <option value="">Select Item Type</option>
-                      <option value="Uniform">Uniform</option>
-                      <option value="Book">Book</option>
-                      <option value="Laboratory Materials">Laboratory Materials</option>
-                      <option value="Others">Others</option>
-                    </select>
-                  </div>
-
-                  <div className="ub-form-group">
-                    <label>Item Name *</label>
-                    <input
-                      type="text"
-                      name="item_name"
-                      value={formData.item_name}
-                      onChange={handleInputChange}
-                      required
-                    />
-                  </div>
-
-                  <div className="ub-form-row">
-                    <div className="ub-form-group">
-                      <label>Quantity *</label>
-                      <input
-                        type="number"
-                        name="quantity"
-                        value={formData.quantity}
-                        onChange={handleInputChange}
-                        min="1"
-                        required
-                      />
-                    </div>
-
-                    <div className="ub-form-group">
-                      <label>Unit Price *</label>
-                      <input
-                        type="number"
-                        name="unit_price"
-                        value={formData.unit_price}
-                        onChange={handleInputChange}
-                        min="0"
-                        step="0.01"
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  <div className="ub-form-group">
-                    <label>Amount Paid</label>
+                    <label>Quantity *</label>
                     <input
                       type="number"
-                      name="amount_paid"
-                      value={formData.amount_paid}
+                      name="quantity"
+                      value={formData.quantity}
+                      onChange={handleInputChange}
+                      min="1"
+                      required
+                    />
+                  </div>
+
+                  <div className="ub-form-group">
+                    <label>Unit Price *</label>
+                    <input
+                      type="number"
+                      name="unit_price"
+                      value={formData.unit_price}
                       onChange={handleInputChange}
                       min="0"
                       step="0.01"
-                    />
-                  </div>
-
-                  <div className="ub-form-group">
-                    <label>School Year *</label>
-                    <input
-                      type="text"
-                      name="school_year"
-                      value={formData.school_year}
-                      onChange={handleInputChange}
-                      placeholder="e.g., 2024-2025"
                       required
                     />
                   </div>
+                </div>
 
-                  <div className="ub-form-group">
-                    <label>Status</label>
-                    <select name="status" value={formData.status} onChange={handleInputChange}>
-                      <option value="Unpaid">Unpaid</option>
-                      <option value="Partially Paid">Partially Paid</option>
-                      <option value="Paid">Paid</option>
-                    </select>
-                  </div>
+                <div className="ub-form-group">
+                  <label>Amount Paid</label>
+                  <input
+                    type="number"
+                    name="amount_paid"
+                    value={formData.amount_paid}
+                    onChange={handleInputChange}
+                    min="0"
+                    step="0.01"
+                  />
                 </div>
-                <div className="ub-modal-actions">
-                  <button
-                    type="button"
-                    className="ub-modal-btn ub-modal-btn-cancel"
-                    onClick={() => setShowModal(false)}
-                  >
-                    Cancel
-                  </button>
-                  <button type="submit" className="ub-modal-btn ub-modal-btn-save">
-                    {currentItem ? 'Update' : 'Create'}
-                  </button>
+
+                <div className="ub-form-group">
+                  <label>School Year *</label>
+                  <input
+                    type="text"
+                    name="school_year"
+                    value={formData.school_year}
+                    onChange={handleInputChange}
+                    placeholder="e.g., 2024-2025"
+                    required
+                  />
                 </div>
-              </form>
+
+                <div className="ub-form-group">
+                  <label>Status</label>
+                  <select name="status" value={formData.status} onChange={handleInputChange}>
+                    <option value="Unpaid">Unpaid</option>
+                    <option value="Partially Paid">Partially Paid</option>
+                    <option value="Paid">Paid</option>
+                  </select>
+                </div>
+              </div>
+              <div className="ub-modal-actions">
+                <button
+                  type="button"
+                  className="ub-modal-btn ub-modal-btn-cancel"
+                  onClick={() => setShowModal(false)}
+                >
+                  Cancel
+                </button>
+                <button type="submit" className="ub-modal-btn ub-modal-btn-save" onClick={handleSubmit}>
+                  {currentItem ? 'Update' : 'Create'}
+                </button>
+              </div>
             </div>
           </div>
         )}

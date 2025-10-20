@@ -5,9 +5,9 @@ import './Footer.css';
 const Footer = () => {
   const currentYear = new Date().getFullYear();
   const [showEmailModal, setShowEmailModal] = useState(false);
-  const emailAddress = 'scsa.samal@gmail.com';
+  const emailAddress = 'scsa.of.samal@gmail.com';
   const schoolLocation = 'St. Catherine of Siena Academy, Samal, Bataan';
-  const phoneNumber = '(047) 123-4567';
+  const phoneNumber = '0976 053 1954';
 
   const handleEmailClick = async () => {
     try {
@@ -48,6 +48,23 @@ const Footer = () => {
             </p>
           </div>
 
+          {/* Mission and Vision */}
+          <div className="footer-section">
+            {/* <h3>Mission and Vision</h3> */}
+            <div className="mission-vision">
+              <p className="footer-about-text">
+              <h4>Mission</h4> As a Christ-centered institution, we aim to transform lives through holistic and innovative Catholic education and service to others.
+              </p>
+              <p className="footer-about-text">
+              <h4>Vision</h4> Guided by Ora et Labora, "Pray and Work", we aspire to become a leading institution of faith, service, and competence in Samal and nearby towns by 2028.
+              </p>
+              <h4>Core Values</h4>
+              <p className="footer-about-text">
+                Faith, Service, Competence
+              </p>
+            </div>
+          </div>
+
           {/* Contact Information */}
           <div className="footer-section">
             <h3>Contact Us</h3>
@@ -78,16 +95,6 @@ const Footer = () => {
               </div>
             </div>
           </div>
-
-          {/* Quick Links */}
-          <div className="footer-section">
-            <h3>Finance Office Hours</h3>
-            <div className="footer-hours">
-              <p><strong>Monday - Friday:</strong> 8:00 AM - 5:00 PM</p>
-              <p><strong>Saturday:</strong> 8:00 AM - 12:00 PM</p>
-              <p><strong>Sunday:</strong> Closed</p>
-            </div>
-          </div>
         </div>
 
         {/* Email Confirmation Modal */}
@@ -108,13 +115,10 @@ const Footer = () => {
           </div>
         )}
 
-        {/* Copyright */}
+        {/* Copyright and Tagline */}
         <div className="footer-bottom">
           <p className="footer-copyright">
             © {currentYear} St. Catherine of Siena Academy, Samal, Bataan. All rights reserved.
-          </p>
-          <p className="footer-tagline">
-            Educating minds, nurturing hearts, building futures.
           </p>
         </div>
       </div>

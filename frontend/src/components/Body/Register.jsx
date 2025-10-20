@@ -1,8 +1,22 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { UserPlus, AlertCircle, CheckCircle } from 'lucide-react';
+import { UserPlus, AlertCircle, CheckCircle, DollarSign, Plus, X } from 'lucide-react';
 import axios from 'axios';
 import './Register.css';
+
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+
+const TUITION_FEES = {
+  'STEM': 25000,
+  'ABM': 22000,
+  'HUMSS': 20000
+};
+
+const SECTION_BY_STRAND = {
+  'STEM': ['Virgen Del Rosario', 'Virgen Del Pilar'],
+  'ABM': ['Virgen Del Carmen'],
+  'HUMSS': ['Virgen Del Carmen']
+};
 
 const Register = ({ user }) => {
   const navigate = useNavigate();
@@ -19,17 +33,54 @@ const Register = ({ user }) => {
     contactnumber: '',
     password: ''
   });
+  
+  const [tuitionDetails, setTuitionDetails] = useState({
+    enabled: false,
+    semester: '1st Semester',
+    amount_paid: '',
+    due_date: ''
+  });
+  
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
+    const { name, value } = e.target;
+    
+    setFormData(prev => {
+      const updated = {
+        ...prev,
+        [name]: value
+      };
+      
+      // Reset section when strand changes
+      if (name === 'strand') {
+        updated.section = '';
+      }
+      
+      return updated;
     });
+    
     setError('');
     setSuccess('');
+  };
+
+  const handleTuitionChange = (e) => {
+    setTuitionDetails({
+      ...tuitionDetails,
+      [e.target.name]: e.target.value
+    });
+  };
+
+  const toggleTuitionDetails = () => {
+    setTuitionDetails(prev => ({
+      ...prev,
+      enabled: !prev.enabled,
+      semester: prev.enabled ? '1st Semester' : prev.semester,
+      amount_paid: prev.enabled ? '' : prev.amount_paid,
+      due_date: prev.enabled ? '' : prev.due_date
+    }));
   };
 
   const handleSubmit = async (e) => {
@@ -46,10 +97,52 @@ const Register = ({ user }) => {
       return;
     }
 
-    try {
-      const response = await axios.post('http://localhost:5000/auth/register', formData);
+    // Validate tuition details if enabled
+    if (tuitionDetails.enabled) {
+      if (!tuitionDetails.due_date) {
+        setError('Please provide a due date for the tuition fee');
+        setLoading(false);
+        return;
+      }
+
+      if (!tuitionDetails.semester) {
+        setError('Please select a semester');
+        setLoading(false);
+        return;
+      }
       
-      setSuccess(response.data.message);
+      const amountPaid = parseFloat(tuitionDetails.amount_paid) || 0;
+      const totalAmount = TUITION_FEES[formData.strand];
+      
+      if (amountPaid > totalAmount) {
+        setError(`Amount paid cannot exceed the total tuition fee of ₱${totalAmount.toLocaleString()}`);
+        setLoading(false);
+        return;
+      }
+    }
+
+    try {
+      // Register the student
+      const registerResponse = await axios.post(`${API_URL}/auth/register`, formData);
+      
+      // Always create tuition fee record if tuition details are enabled
+      if (tuitionDetails.enabled) {
+        const totalAmount = TUITION_FEES[formData.strand];
+        const amountPaid = parseFloat(tuitionDetails.amount_paid) || 0;
+        
+        const tuitionData = {
+          LRN: formData.LRN,
+          school_year: formData.school_year,
+          semester: tuitionDetails.semester,
+          total_amount: totalAmount,
+          amount_paid: amountPaid,
+          due_date: tuitionDetails.due_date
+        };
+        
+        await axios.post(`${API_URL}/tuition-fees`, tuitionData);
+      }
+      
+      setSuccess(registerResponse.data.message + (tuitionDetails.enabled ? ' with tuition fee record' : ''));
       
       // Reset form after successful registration
       setTimeout(() => {
@@ -66,6 +159,12 @@ const Register = ({ user }) => {
           contactnumber: '',
           password: ''
         });
+        setTuitionDetails({
+          enabled: false,
+          semester: '1st Semester',
+          amount_paid: '',
+          due_date: ''
+        });
         setSuccess('');
       }, 2000);
     } catch (err) {
@@ -74,6 +173,9 @@ const Register = ({ user }) => {
       setLoading(false);
     }
   };
+
+  const availableSections = formData.strand ? SECTION_BY_STRAND[formData.strand] : [];
+  const tuitionAmount = formData.strand ? TUITION_FEES[formData.strand] : 0;
 
   return (
     <div className="register-container">
@@ -190,6 +292,22 @@ const Register = ({ user }) => {
               </div>
 
               <div className="form-group">
+                <label htmlFor="strand">Strand *</label>
+                <select
+                  id="strand"
+                  name="strand"
+                  value={formData.strand}
+                  onChange={handleChange}
+                  required
+                >
+                  <option value="">Select Strand</option>
+                  <option value="STEM">STEM</option>
+                  <option value="ABM">ABM</option>
+                  <option value="HUMSS">HUMSS</option>
+                </select>
+              </div>
+
+              <div className="form-group">
                 <label htmlFor="section">Section *</label>
                 <select
                   id="section"
@@ -197,30 +315,19 @@ const Register = ({ user }) => {
                   value={formData.section}
                   onChange={handleChange}
                   required
+                  disabled={!formData.strand}
                 >
-                  <option value="">Select Section</option>
-                  <option value="Section 1">Section 1</option>
-                  <option value="Section 2">Section 2</option>
-                  <option value="Section 3">Section 3</option>
-                  <option value="Section 4">Section 4</option>
+                  <option value="">
+                    {formData.strand ? 'Select Section' : 'Select Strand First'}
+                  </option>
+                  {availableSections.map(section => (
+                    <option key={section} value={section}>{section}</option>
+                  ))}
                 </select>
               </div>
             </div>
 
             <div className="form-row">
-              <div className="form-group">
-                <label htmlFor="strand">Strand *</label>
-                <input
-                  type="text"
-                  id="strand"
-                  name="strand"
-                  value={formData.strand}
-                  onChange={handleChange}
-                  placeholder="e.g., STEM, HUMSS, ABM"
-                  required
-                />
-              </div>
-
               <div className="form-group">
                 <label htmlFor="school_year">School Year *</label>
                 <input
@@ -233,9 +340,7 @@ const Register = ({ user }) => {
                   required
                 />
               </div>
-            </div>
 
-            <div className="form-row">
               <div className="form-group">
                 <label htmlFor="contactnumber">Contact Number *</label>
                 <input
@@ -261,6 +366,97 @@ const Register = ({ user }) => {
                   required
                 />
               </div>
+            </div>
+
+            {/* Tuition Details Section */}
+            <div className="tuition-details-section">
+              <button 
+                type="button" 
+                className="tuition-toggle-btn"
+                onClick={toggleTuitionDetails}
+              >
+                {tuitionDetails.enabled ? <X size={18} /> : <Plus size={18} />}
+                {tuitionDetails.enabled ? 'Remove Tuition Details' : 'Add Tuition Details'}
+              </button>
+
+              {tuitionDetails.enabled && (
+                <div className="tuition-details-form">
+                  <div className="tuition-info-card">
+                    <DollarSign size={20} />
+                    <div>
+                      <p className="tuition-info-label">Tuition Fee for {formData.strand || 'Selected Strand'}</p>
+                      <p className="tuition-info-amount">
+                        ₱{tuitionAmount.toLocaleString()}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label htmlFor="semester">Semester *</label>
+                      <select
+                        id="semester"
+                        name="semester"
+                        value={tuitionDetails.semester}
+                        onChange={handleTuitionChange}
+                        required
+                      >
+                        <option value="1st Semester">1st Semester</option>
+                        <option value="2nd Semester">2nd Semester</option>
+                      </select>
+                    </div>
+
+                    <div className="form-group">
+                      <label htmlFor="due_date">Due Date *</label>
+                      <input
+                        type="date"
+                        id="due_date"
+                        name="due_date"
+                        value={tuitionDetails.due_date}
+                        onChange={handleTuitionChange}
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div className="form-row">
+                    <div className="form-group full-width">
+                      <label htmlFor="amount_paid">Initial Payment Amount</label>
+                      <input
+                        type="number"
+                        id="amount_paid"
+                        name="amount_paid"
+                        value={tuitionDetails.amount_paid}
+                        onChange={handleTuitionChange}
+                        placeholder="Enter amount to pay (leave empty for unpaid)"
+                        min="0"
+                        max={tuitionAmount}
+                        step="0.01"
+                      />
+                      <small className="form-hint">
+                        Leave empty to create an unpaid tuition record. Maximum: ₱{tuitionAmount.toLocaleString()}
+                      </small>
+                    </div>
+                  </div>
+
+                  {tuitionDetails.amount_paid && (
+                    <div className="tuition-summary">
+                      <div className="tuition-summary-row">
+                        <span>Total Tuition:</span>
+                        <span>₱{tuitionAmount.toLocaleString()}</span>
+                      </div>
+                      <div className="tuition-summary-row">
+                        <span>Initial Payment:</span>
+                        <span>₱{parseFloat(tuitionDetails.amount_paid || 0).toLocaleString()}</span>
+                      </div>
+                      <div className="tuition-summary-row tuition-summary-balance">
+                        <span>Balance:</span>
+                        <span>₱{(tuitionAmount - parseFloat(tuitionDetails.amount_paid || 0)).toLocaleString()}</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             <div className="form-actions">
