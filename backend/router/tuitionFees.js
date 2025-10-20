@@ -43,13 +43,20 @@ router.get('/', async (req, res) => {
     if (school_year) filter.school_year = school_year;
     if (semester) filter.semester = semester;
 
-    const tuitionFees = await TuitionFee.find(filter).populate({
-      path: 'LRN',
-      select: 'firstname middlename lastname gradelevel section',
-      foreignField: 'LRN',
-      localField: 'LRN'
-    });
-    res.json(tuitionFees);
+    const tuitionFees = await TuitionFee.find(filter).lean();
+    
+    // Manually populate student information
+    const populatedFees = await Promise.all(
+      tuitionFees.map(async (fee) => {
+        const student = await User.findOne({ LRN: fee.LRN }).select('LRN firstname middlename lastname gradelevel section').lean();
+        return {
+          ...fee,
+          studentInfo: student
+        };
+      })
+    );
+    
+    res.json(populatedFees);
   } catch (error) {
     console.error('Error fetching tuition fees:', error);
     res.status(500).json({ message: 'Server error fetching tuition fees' });
@@ -59,8 +66,20 @@ router.get('/', async (req, res) => {
 // Get tuition fee by student LRN
 router.get('/student/:lrn', async (req, res) => {
   try {
-    const tuitionFees = await TuitionFee.find({ LRN: req.params.lrn });
-    res.json(tuitionFees);
+    const tuitionFees = await TuitionFee.find({ LRN: req.params.lrn }).lean();
+    
+    // Manually populate student information
+    const populatedFees = await Promise.all(
+      tuitionFees.map(async (fee) => {
+        const student = await User.findOne({ LRN: fee.LRN }).select('LRN firstname middlename lastname gradelevel section').lean();
+        return {
+          ...fee,
+          studentInfo: student
+        };
+      })
+    );
+    
+    res.json(populatedFees);
   } catch (error) {
     console.error('Error fetching tuition fee:', error);
     res.status(500).json({ message: 'Server error fetching tuition fee' });

@@ -312,6 +312,28 @@ const TuitionFees = ({ user }) => {
     });
   };
 
+  const getStudentName = (fee) => {
+    if (fee.studentInfo) {
+      const { firstname, middlename, lastname } = fee.studentInfo;
+      return `${firstname || ''} ${middlename || ''} ${lastname || ''}`.trim();
+    }
+    if (fee.LRN && typeof fee.LRN === 'object') {
+      const { firstname, middlename, lastname } = fee.LRN;
+      return `${firstname || ''} ${middlename || ''} ${lastname || ''}`.trim();
+    }
+    return 'N/A';
+  };
+
+  const getStudentLRN = (fee) => {
+    if (fee.studentInfo) {
+      return fee.studentInfo.LRN || 'N/A';
+    }
+    if (fee.LRN && typeof fee.LRN === 'object') {
+      return fee.LRN.LRN || 'N/A';
+    }
+    return fee.LRN || 'N/A';
+  };
+
   return (
     <div className="tuition-fees-wrapper">
       <div className="tuition-fees-container">
@@ -448,12 +470,8 @@ const TuitionFees = ({ user }) => {
                 <tbody>
                   {filteredFees.map((fee) => (
                     <tr key={fee._id}>
-                      {isAdmin && <td>{fee.LRN?.LRN || fee.LRN}</td>}
-                      {isAdmin && (
-                        <td>
-                          {fee.LRN?.firstname} {fee.LRN?.middlename} {fee.LRN?.lastname}
-                        </td>
-                      )}
+                      {isAdmin && <td>{getStudentLRN(fee)}</td>}
+                      {isAdmin && <td>{getStudentName(fee)}</td>}
                       <td>{fee.school_year}</td>
                       <td>{fee.semester}</td>
                       <td>{formatCurrency(fee.total_amount)}</td>
@@ -623,7 +641,7 @@ const TuitionFees = ({ user }) => {
               <form onSubmit={handlePaymentSubmit}>
                 <div className="tuition-modal-body">
                   <div className="tuition-payment-info">
-                    <p><strong>Student:</strong> {currentFee?.LRN?.firstname} {currentFee?.LRN?.lastname}</p>
+                    <p><strong>Student:</strong> {getStudentName(currentFee)}</p>
                     <p><strong>Semester:</strong> {currentFee?.semester}</p>
                     <p><strong>Current Balance:</strong> {formatCurrency(currentFee?.balance)}</p>
                   </div>
@@ -711,7 +729,7 @@ const TuitionFees = ({ user }) => {
         {/* Payment History Modal */}
         {showHistoryModal && (
           <div className="tuition-modal-overlay">
-            <div className="tuition-modal tuition-modal-large">
+            <div className="tuition-modal tuition-modal-wide">
               <div className="tuition-modal-header">
                 <h3>Payment History</h3>
                 <button className="tuition-modal-close" onClick={() => setShowHistoryModal(false)}>
@@ -719,14 +737,39 @@ const TuitionFees = ({ user }) => {
                 </button>
               </div>
               <div className="tuition-modal-body">
-                <div className="tuition-payment-info">
-                  <p><strong>Student:</strong> {currentFee?.LRN?.firstname} {currentFee?.LRN?.middlename} {currentFee?.LRN?.lastname}</p>
-                  <p><strong>LRN:</strong> {currentFee?.LRN?.LRN || currentFee?.LRN}</p>
-                  <p><strong>School Year:</strong> {currentFee?.school_year}</p>
-                  <p><strong>Semester:</strong> {currentFee?.semester}</p>
-                  <p><strong>Total Amount:</strong> {formatCurrency(currentFee?.total_amount)}</p>
-                  <p><strong>Current Balance:</strong> <span className="tuition-balance">{formatCurrency(currentFee?.balance)}</span></p>
-                  <p><strong>Status:</strong> <span className={`tuition-status ${getStatusClass(currentFee?.status)}`}>{currentFee?.status}</span></p>
+                <div className="tuition-payment-info-grid">
+                  <div className="tuition-payment-info-column">
+                    <div className="tuition-info-item">
+                      <label>Student:</label>
+                      <span>{getStudentName(currentFee)}</span>
+                    </div>
+                    <div className="tuition-info-item">
+                      <label>LRN:</label>
+                      <span>{getStudentLRN(currentFee)}</span>
+                    </div>
+                    <div className="tuition-info-item">
+                      <label>School Year:</label>
+                      <span>{currentFee?.school_year}</span>
+                    </div>
+                    <div className="tuition-info-item">
+                      <label>Semester:</label>
+                      <span>{currentFee?.semester}</span>
+                    </div>
+                  </div>
+                  <div className="tuition-payment-info-column">
+                    <div className="tuition-info-item">
+                      <label>Total Amount:</label>
+                      <span className="tuition-amount-value">{formatCurrency(currentFee?.total_amount)}</span>
+                    </div>
+                    <div className="tuition-info-item">
+                      <label>Current Balance:</label>
+                      <span className="tuition-balance-value">{formatCurrency(currentFee?.balance)}</span>
+                    </div>
+                    <div className="tuition-info-item">
+                      <label>Status:</label>
+                      <span className={`tuition-status ${getStatusClass(currentFee?.status)}`}>{currentFee?.status}</span>
+                    </div>
+                  </div>
                 </div>
 
                 {currentFee?.payment_history && currentFee.payment_history.length > 0 ? (
@@ -762,7 +805,8 @@ const TuitionFees = ({ user }) => {
                                   <button
                                     className="tuition-action-btn tuition-action-btn-edit"
                                     onClick={() => handleEditPayment(payment)}
-                                    title="Edit Payment"
+                                    title={currentFee?.status === 'Paid' ? 'Cannot edit - Already paid' : 'Edit Payment'}
+                                    disabled={currentFee?.status === 'Paid'}
                                   >
                                     <Edit size={14} />
                                   </button>
@@ -940,7 +984,7 @@ const TuitionFees = ({ user }) => {
               <div className="tuition-modal-body">
                 <p>Are you sure you want to delete this tuition fee record?</p>
                 <div className="tuition-payment-details">
-                  <p><strong>Student:</strong> {feeToDelete?.LRN?.firstname} {feeToDelete?.LRN?.lastname}</p>
+                  <p><strong>Student:</strong> {getStudentName(feeToDelete)}</p>
                   <p><strong>School Year:</strong> {feeToDelete?.school_year}</p>
                   <p><strong>Semester:</strong> {feeToDelete?.semester}</p>
                   <p><strong>Total Amount:</strong> {formatCurrency(feeToDelete?.total_amount)}</p>
