@@ -2,6 +2,10 @@ import express from 'express';
 import mongoose from 'mongoose';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
 import dashboardRouter from './router/dashboard.js';
 import authRouter from './router/auth.js';
 import tuitionFeesRouter from './router/tuitionFees.js';
@@ -16,11 +20,15 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// Required to serve frontend in ES Modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
 // Middleware
 app.use(cors());
 app.use(express.json());
 
-// Use routers
+// API Routes
 app.use('/dashboard', dashboardRouter);
 app.use('/auth', authRouter);
 app.use('/tuition-fees', tuitionFeesRouter);
@@ -42,7 +50,7 @@ mongoose.connect(mongoUri, {
 })
   .then(async () => {
     console.log('✓ MongoDB connected successfully');
-    
+
     // Create default admin if doesn't exist
     const adminExists = await User.findOne({ LRN: 'admin' });
     if (!adminExists) {
@@ -67,6 +75,14 @@ mongoose.connect(mongoUri, {
     console.error('✗ MongoDB connection error:', err.message);
     process.exit(1);
   });
+
+// Serve frontend build (React)
+app.use(express.static(path.join(__dirname, '../frontend/build')));
+
+// Catch-all route for React Router
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, '../frontend/build', 'index.html'));
+});
 
 // Start Server
 app.listen(PORT, () => {
