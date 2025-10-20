@@ -1,0 +1,272 @@
+.navbar-wrapper {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Top Bar */
+.navbar-top-bar {
+  background: linear-gradient(135deg, #4a148c 0%, #7b1fa2 100%);
+  color: white;
+  padding: 0.75rem 0;
+}
+
+.navbar-top-bar .navbar-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.navbar-datetime {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  font-size: 0.875rem;
+}
+
+.navbar-date {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.navbar-time {
+  font-weight: 600;
+  font-family: 'Courier New', monospace;
+}
+
+.navbar-user-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.navbar-user-info strong {
+  font-weight: 600;
+}
+
+/* Main Navbar */
+.navbar {
+  background: white;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.navbar-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+.navbar-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 0;
+}
+
+/* Logo */
+.navbar-logo {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.navbar-logo-circle {
+  width: 50px;
+  height: 50px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 700;
+  font-size: 0.875rem;
+  box-shadow: 0 4px 6px rgba(102, 126, 234, 0.3);
+}
+
+.navbar-title h1 {
+  font-size: 1.25rem;
+  color: #2d3748;
+  margin: 0;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.navbar-subtitle {
+  font-size: 0.75rem;
+  color: #718096;
+  margin: 0.25rem 0 0 0;
+  font-weight: 400;
+}
+
+/* Desktop Navigation */
+.navbar-links-desktop {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.navbar-links-desktop a {
+  color: #4a5568;
+  text-decoration: none;
+  padding: 0.625rem 1rem;
+  border-radius: 8px;
+  font-weight: 500;
+  font-size: 0.875rem;
+  transition: all 0.2s;
+}
+
+.navbar-links-desktop a:hover {
+  background: #f7fafc;
+  color: #667eea;
+}
+
+.navbar-logout-btn {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  padding: 0.625rem 1.25rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.navbar-logout-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
+}
+
+/* Mobile Menu Button */
+.navbar-menu-button {
+  display: none;
+  background: none;
+  border: none;
+  color: #4a5568;
+  cursor: pointer;
+  padding: 0.5rem;
+}
+
+/* Mobile Navigation */
+.navbar-mobile {
+  display: none;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .navbar-title h1 {
+    font-size: 1.1rem;
+  }
+
+  .navbar-subtitle {
+    font-size: 0.7rem;
+  }
+
+  .navbar-logo-circle {
+    width: 45px;
+    height: 45px;
+  }
+}
+
+@media (max-width: 768px) {
+  .navbar-top-bar .navbar-container {
+    padding: 0 1rem;
+  }
+
+  .navbar-datetime {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+    font-size: 0.75rem;
+  }
+
+  .navbar-user-info {
+    font-size: 0.75rem;
+  }
+
+  .navbar-container {
+    padding: 0 1rem;
+  }
+
+  .navbar-title h1 {
+    font-size: 0.95rem;
+  }
+
+  .navbar-subtitle {
+    font-size: 0.65rem;
+  }
+
+  .navbar-logo-circle {
+    width: 40px;
+    height: 40px;
+    font-size: 0.75rem;
+  }
+
+  .navbar-links-desktop {
+    display: none;
+  }
+
+  .navbar-menu-button {
+    display: block;
+  }
+
+  .navbar-mobile {
+    display: block;
+    background: white;
+    border-top: 1px solid #e2e8f0;
+  }
+
+  .navbar-mobile-content {
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .navbar-mobile-content a {
+    color: #4a5568;
+    text-decoration: none;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    font-weight: 500;
+    transition: all 0.2s;
+  }
+
+  .navbar-mobile-content a:hover {
+    background: #f7fafc;
+    color: #667eea;
+  }
+
+  .navbar-logout-btn-mobile {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    width: 100%;
+    margin-top: 0.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .navbar-logo {
+    gap: 0.5rem;
+  }
+
+  .navbar-title h1 {
+    font-size: 0.85rem;
+  }
+
+  .navbar-subtitle {
+    display: none;
+  }
+}

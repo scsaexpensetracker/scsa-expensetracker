@@ -1,0 +1,332 @@
+.student-dashboard-wrapper {
+  min-height: calc(100vh - 160px);
+  background: radial-gradient(circle, #a1c4fd 0%, #3b82f6 100%);
+  padding: 2rem 1rem;
+}
+
+.student-dashboard-container {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* Welcome Banner */
+.student-welcome-banner {
+  background: white;
+  border-radius: 16px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.student-welcome-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.student-welcome-text h1 {
+  font-size: 2rem;
+  color: #2d3748;
+  margin: 0 0 0.5rem 0;
+  font-weight: 700;
+}
+
+.student-welcome-text p {
+  color: #718096;
+  font-size: 1rem;
+  margin: 0;
+}
+
+.student-welcome-icon {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  width: 80px;
+  height: 80px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+}
+
+/* Stats Grid */
+.student-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.student-stat-card {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.student-stat-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+.student-stat-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+}
+
+.student-stat-icon-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.student-stat-icon-success {
+  background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+}
+
+.student-stat-icon-warning {
+  background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%);
+}
+
+.student-stat-icon-info {
+  background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+}
+
+.student-stat-info {
+  flex: 1;
+}
+
+.student-stat-label {
+  font-size: 0.875rem;
+  color: #718096;
+  margin: 0 0 0.25rem 0;
+}
+
+.student-stat-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #2d3748;
+  margin: 0;
+}
+
+/* Content Grid */
+.student-content-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 1.5rem;
+}
+
+/* Card Styles */
+.student-info-card,
+.student-academic-card,
+.student-quick-links-card,
+.student-financial-overview {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.student-card-header {
+  padding: 1.5rem;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.student-card-header h2 {
+  font-size: 1.25rem;
+  color: #2d3748;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+}
+
+.student-edit-btn {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: opacity 0.2s;
+}
+
+.student-edit-btn:hover {
+  opacity: 0.9;
+}
+
+.student-card-body {
+  padding: 1.5rem;
+}
+
+/* Info Grid */
+.student-info-grid {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.student-info-item label {
+  display: block;
+  font-size: 0.875rem;
+  color: #718096;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+}
+
+.student-info-item p {
+  color: #2d3748;
+  font-size: 1rem;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.student-info-icon {
+  color: #667eea;
+}
+
+/* Academic Details */
+.student-academic-details {
+  display: grid;
+  gap: 1rem;
+}
+
+.student-academic-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  background: #f7fafc;
+  border-radius: 8px;
+}
+
+.student-academic-label {
+  color: #718096;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.student-academic-value {
+  color: #2d3748;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+/* Quick Links */
+.student-quick-links {
+  display: grid;
+  gap: 1rem;
+}
+
+.student-quick-link-btn {
+  padding: 1rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: white;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.student-quick-link-btn:hover {
+  transform: translateX(4px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.student-quick-link-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.student-quick-link-success {
+  background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+}
+
+.student-quick-link-warning {
+  background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%);
+}
+
+.student-quick-link-info {
+  background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+}
+
+/* Financial Overview */
+.student-financial-message {
+  text-align: center;
+  padding: 2rem;
+}
+
+.student-financial-icon {
+  margin: 0 auto 1rem;
+  width: 64px;
+  height: 64px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+}
+
+.student-financial-message p {
+  color: #718096;
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .student-dashboard-wrapper {
+    padding: 1rem 0.5rem;
+  }
+
+  .student-welcome-banner {
+    padding: 1.5rem;
+  }
+
+  .student-welcome-text h1 {
+    font-size: 1.5rem;
+  }
+
+  .student-welcome-icon {
+    width: 60px;
+    height: 60px;
+  }
+
+  .student-stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .student-content-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .student-card-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .student-edit-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
