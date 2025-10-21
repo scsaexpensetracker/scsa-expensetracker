@@ -4,14 +4,12 @@ import {
   Search, 
   Filter, 
   AlertCircle,
-  CheckCircle,
   Download,
-  Calendar,
-  DollarSign,
-  TrendingUp,
-  Users
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import axios from 'axios';
+import { jsPDF } from 'jspdf';
 import './PaymentHistory.css';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
@@ -21,9 +19,10 @@ const PaymentHistory = ({ user }) => {
   const [filteredPayments, setFilteredPayments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
-  const [stats, setStats] = useState(null);
-  const [adminStats, setAdminStats] = useState(null);
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
   
   const [filters, setFilters] = useState({
     LRN: '',
@@ -31,16 +30,14 @@ const PaymentHistory = ({ user }) => {
     section: '',
     payment_type: '',
     payment_method: '',
-    school_year: ''
+    school_year: '',
+    status: ''
   });
 
   const isAdmin = user.role === 'admin';
 
   useEffect(() => {
     fetchPayments();
-    if (!isAdmin) {
-      fetchStats();
-    }
   }, []);
 
   useEffect(() => {
@@ -54,60 +51,29 @@ const PaymentHistory = ({ user }) => {
         ? `${API_URL}/payment-history` 
         : `${API_URL}/payment-history/student/${user.LRN}`;
       const response = await axios.get(url);
-      setPayments(response.data);
-      setFilteredPayments(response.data);
       
-      // Calculate admin stats from all payments
-      if (isAdmin) {
-        calculateAdminStats(response.data);
-      }
+      // Ensure response data is an array
+      const paymentsData = Array.isArray(response.data) ? response.data : [];
+      setPayments(paymentsData);
+      setFilteredPayments(paymentsData);
     } catch (err) {
       setError('Failed to fetch payment history');
       console.error(err);
+      // Set empty arrays on error
+      setPayments([]);
+      setFilteredPayments([]);
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchStats = async () => {
-    try {
-      const response = await axios.get(`${API_URL}/payment-history/stats/${user.LRN}`);
-      setStats(response.data);
-    } catch (err) {
-      console.error('Failed to fetch stats:', err);
-    }
-  };
-
-  const calculateAdminStats = (paymentsData) => {
-    const totalAmount = paymentsData.reduce((sum, payment) => sum + payment.amount, 0);
-    const totalCount = paymentsData.length;
-    
-    // Get unique students
-    const uniqueStudents = new Set(paymentsData.map(p => p.LRN?.LRN || p.LRN));
-    const studentCount = uniqueStudents.size;
-    
-    // Payment by type
-    const paymentsByType = paymentsData.reduce((acc, payment) => {
-      acc[payment.payment_type] = (acc[payment.payment_type] || 0) + payment.amount;
-      return acc;
-    }, {});
-
-    // Payment by method
-    const paymentsByMethod = paymentsData.reduce((acc, payment) => {
-      acc[payment.payment_method] = (acc[payment.payment_method] || 0) + payment.amount;
-      return acc;
-    }, {});
-
-    setAdminStats({
-      totalAmount,
-      totalCount,
-      studentCount,
-      paymentsByType,
-      paymentsByMethod
-    });
-  };
-
   const applyFilters = () => {
+    // Ensure payments is an array before spreading
+    if (!Array.isArray(payments)) {
+      setFilteredPayments([]);
+      return;
+    }
+
     let filtered = [...payments];
 
     if (filters.LRN && isAdmin) {
@@ -136,12 +102,12 @@ const PaymentHistory = ({ user }) => {
       filtered = filtered.filter(p => p.school_year === filters.school_year);
     }
 
-    setFilteredPayments(filtered);
-    
-    // Recalculate admin stats based on filtered data
-    if (isAdmin) {
-      calculateAdminStats(filtered);
+    if (filters.status) {
+      filtered = filtered.filter(p => p.status_after_payment === filters.status);
     }
+
+    setFilteredPayments(filtered);
+    setCurrentPage(1); // Reset to first page when filters change
   };
 
   const handleFilterChange = (e) => {
@@ -158,47 +124,180 @@ const PaymentHistory = ({ user }) => {
       section: '',
       payment_type: '',
       payment_method: '',
-      school_year: ''
+      school_year: '',
+      status: ''
     });
   };
 
   const handleDownloadReceipt = (payment) => {
-    const receiptContent = `
-SAINT CATHERINE OF SIENA ACADEMY
-Official Receipt
-----------------------------------------
-Receipt Number: ${payment.receipt_number}
-Date: ${formatDate(payment.payment_date)}
-
-Student Information:
-LRN: ${payment.LRN?.LRN || payment.LRN}
-Name: ${payment.LRN?.firstname || ''} ${payment.LRN?.middlename || ''} ${payment.LRN?.lastname || ''}
-Grade Level: ${payment.LRN?.gradelevel || ''}
-Section: ${payment.LRN?.section || ''}
-
-Payment Details:
-Type: ${payment.payment_type}
-Description: ${payment.description}
-Amount: ${formatCurrency(payment.amount)}
-Payment Method: ${payment.payment_method}
-School Year: ${payment.school_year}
-
-Processed By: ${payment.processed_by}
-${payment.remarks ? 'Remarks: ' + payment.remarks : ''}
-
-----------------------------------------
-This is an official receipt from SCSA
-    `;
-
-    const blob = new Blob([receiptContent], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `Receipt_${payment.receipt_number}.txt`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+    // Create new PDF document
+    const doc = new jsPDF();
+    
+    // Set font sizes and styles
+    const titleSize = 16;
+    const headerSize = 12;
+    const normalSize = 10;
+    const smallSize = 8;
+    
+    let yPosition = 20;
+    
+    // Header - School Name
+    doc.setFontSize(titleSize);
+    doc.setFont(undefined, 'bold');
+    doc.text('SAINT CATHERINE OF SIENA ACADEMY', 105, yPosition, { align: 'center' });
+    
+    yPosition += 8;
+    doc.setFontSize(headerSize);
+    doc.text('Official Receipt', 105, yPosition, { align: 'center' });
+    
+    // Line separator
+    yPosition += 5;
+    doc.setLineWidth(0.5);
+    doc.line(20, yPosition, 190, yPosition);
+    
+    // Receipt Number and Date
+    yPosition += 10;
+    doc.setFontSize(normalSize);
+    doc.setFont(undefined, 'bold');
+    doc.text('Receipt Number:', 20, yPosition);
+    doc.setFont(undefined, 'normal');
+    doc.text(payment.receipt_number, 60, yPosition);
+    
+    doc.setFont(undefined, 'bold');
+    doc.text('Date:', 120, yPosition);
+    doc.setFont(undefined, 'normal');
+    doc.text(formatDate(payment.payment_date), 135, yPosition);
+    
+    // Student Information Section
+    yPosition += 15;
+    doc.setFont(undefined, 'bold');
+    doc.setFontSize(headerSize);
+    doc.text('Student Information:', 20, yPosition);
+    
+    yPosition += 7;
+    doc.setFontSize(normalSize);
+    
+    if (payment.LRN && typeof payment.LRN === 'object') {
+      doc.setFont(undefined, 'bold');
+      doc.text('LRN:', 20, yPosition);
+      doc.setFont(undefined, 'normal');
+      doc.text(payment.LRN.LRN || 'N/A', 40, yPosition);
+      
+      yPosition += 6;
+      doc.setFont(undefined, 'bold');
+      doc.text('Name:', 20, yPosition);
+      doc.setFont(undefined, 'normal');
+      const fullName = `${payment.LRN.firstname || ''} ${payment.LRN.middlename || ''} ${payment.LRN.lastname || ''}`.trim();
+      doc.text(fullName, 40, yPosition);
+      
+      yPosition += 6;
+      doc.setFont(undefined, 'bold');
+      doc.text('Grade Level:', 20, yPosition);
+      doc.setFont(undefined, 'normal');
+      doc.text(payment.LRN.gradelevel || '', 50, yPosition);
+      
+      yPosition += 6;
+      doc.setFont(undefined, 'bold');
+      doc.text('Section:', 20, yPosition);
+      doc.setFont(undefined, 'normal');
+      doc.text(payment.LRN.section || '', 40, yPosition);
+    } else {
+      doc.setFont(undefined, 'bold');
+      doc.text('LRN:', 20, yPosition);
+      doc.setFont(undefined, 'normal');
+      doc.text(payment.LRN || 'N/A', 40, yPosition);
+    }
+    
+    // Payment Details Section
+    yPosition += 15;
+    doc.setFont(undefined, 'bold');
+    doc.setFontSize(headerSize);
+    doc.text('Payment Details:', 20, yPosition);
+    
+    yPosition += 7;
+    doc.setFontSize(normalSize);
+    
+    doc.setFont(undefined, 'bold');
+    doc.text('Type:', 20, yPosition);
+    doc.setFont(undefined, 'normal');
+    doc.text(payment.payment_type, 60, yPosition);
+    
+    yPosition += 6;
+    doc.setFont(undefined, 'bold');
+    doc.text('Description:', 20, yPosition);
+    doc.setFont(undefined, 'normal');
+    doc.text(payment.description, 60, yPosition);
+    
+    yPosition += 6;
+    doc.setFont(undefined, 'bold');
+    doc.text('Amount Paid:', 20, yPosition);
+    doc.setFont(undefined, 'normal');
+    doc.text(formatCurrency(payment.amount), 60, yPosition);
+    
+    yPosition += 6;
+    doc.setFont(undefined, 'bold');
+    doc.text('Payment Method:', 20, yPosition);
+    doc.setFont(undefined, 'normal');
+    doc.text(payment.payment_method, 60, yPosition);
+    
+    yPosition += 6;
+    doc.setFont(undefined, 'bold');
+    doc.text('School Year:', 20, yPosition);
+    doc.setFont(undefined, 'normal');
+    doc.text(payment.school_year, 60, yPosition);
+    
+    yPosition += 6;
+    doc.setFont(undefined, 'bold');
+    doc.text('Status After Payment:', 20, yPosition);
+    doc.setFont(undefined, 'normal');
+    doc.text(payment.status_after_payment, 60, yPosition);
+    
+    if (payment.total_amount !== undefined) {
+      yPosition += 6;
+      doc.setFont(undefined, 'bold');
+      doc.text('Total Amount:', 20, yPosition);
+      doc.setFont(undefined, 'normal');
+      doc.text(formatCurrency(payment.total_amount), 60, yPosition);
+    }
+    
+    if (payment.balance_after_payment !== undefined) {
+      yPosition += 6;
+      doc.setFont(undefined, 'bold');
+      doc.text('Balance After Payment:', 20, yPosition);
+      doc.setFont(undefined, 'normal');
+      doc.text(formatCurrency(payment.balance_after_payment), 60, yPosition);
+    }
+    
+    // Additional Information
+    yPosition += 15;
+    doc.setFont(undefined, 'bold');
+    doc.text('Processed By:', 20, yPosition);
+    doc.setFont(undefined, 'normal');
+    doc.text(payment.processed_by, 60, yPosition);
+    
+    if (payment.remarks) {
+      yPosition += 6;
+      doc.setFont(undefined, 'bold');
+      doc.text('Remarks:', 20, yPosition);
+      doc.setFont(undefined, 'normal');
+      doc.text(payment.remarks, 60, yPosition);
+    }
+    
+    // Footer
+    yPosition += 20;
+    doc.setLineWidth(0.5);
+    doc.line(20, yPosition, 190, yPosition);
+    
+    yPosition += 7;
+    doc.setFontSize(smallSize);
+    doc.setFont(undefined, 'italic');
+    doc.text('This is an official receipt from SCSA', 105, yPosition, { align: 'center' });
+    
+    yPosition += 5;
+    doc.text(`Generated on: ${new Date().toLocaleString('en-US')}`, 105, yPosition, { align: 'center' });
+    
+    // Save the PDF
+    doc.save(`Receipt_${payment.receipt_number}.pdf`);
   };
 
   const formatCurrency = (amount) => {
@@ -214,6 +313,31 @@ This is an official receipt from SCSA
       month: 'long',
       day: 'numeric'
     });
+  };
+
+  // Pagination calculations
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  
+  // Ensure filteredPayments is an array before slicing
+  const safeFilteredPayments = Array.isArray(filteredPayments) ? filteredPayments : [];
+  const currentPayments = safeFilteredPayments.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(safeFilteredPayments.length / itemsPerPage);
+
+  const goToPage = (pageNumber) => {
+    setCurrentPage(pageNumber);
+  };
+
+  const goToNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  const goToPreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
   };
 
   return (
@@ -232,119 +356,11 @@ This is an official receipt from SCSA
           </div>
         </div>
 
-        {/* Alerts */}
+        {/* Alert */}
         {error && (
           <div className="ph-alert ph-alert-error">
             <AlertCircle size={18} />
             <span>{error}</span>
-          </div>
-        )}
-
-        {success && (
-          <div className="ph-alert ph-alert-success">
-            <CheckCircle size={18} />
-            <span>{success}</span>
-          </div>
-        )}
-
-        {/* Stats Cards */}
-        {!isAdmin && stats && (
-          <div className="ph-stats-grid">
-            <div className="ph-stat-card">
-              <div className="ph-stat-icon ph-stat-icon-total">
-                <DollarSign size={24} />
-              </div>
-              <div className="ph-stat-content">
-                <h3>Total Payments</h3>
-                <p className="ph-stat-value">{formatCurrency(stats.totalAmount)}</p>
-              </div>
-            </div>
-            <div className="ph-stat-card">
-              <div className="ph-stat-icon ph-stat-icon-count">
-                <Receipt size={24} />
-              </div>
-              <div className="ph-stat-content">
-                <h3>Transaction Count</h3>
-                <p className="ph-stat-value">{stats.paymentCount}</p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Admin Dashboard Stats */}
-        {isAdmin && adminStats && (
-          <div className="ph-admin-dashboard">
-            <h2 className="ph-dashboard-title">Payment Overview Dashboard</h2>
-            <div className="ph-stats-grid">
-              <div className="ph-stat-card">
-                <div className="ph-stat-icon ph-stat-icon-total">
-                  <DollarSign size={28} />
-                </div>
-                <div className="ph-stat-content">
-                  <h3>Total Revenue</h3>
-                  <p className="ph-stat-value">{formatCurrency(adminStats.totalAmount)}</p>
-                  <span className="ph-stat-label">All Payments</span>
-                </div>
-              </div>
-              <div className="ph-stat-card">
-                <div className="ph-stat-icon ph-stat-icon-count">
-                  <Receipt size={28} />
-                </div>
-                <div className="ph-stat-content">
-                  <h3>Total Transactions</h3>
-                  <p className="ph-stat-value">{adminStats.totalCount}</p>
-                  <span className="ph-stat-label">Payment Records</span>
-                </div>
-              </div>
-              <div className="ph-stat-card">
-                <div className="ph-stat-icon ph-stat-icon-students">
-                  <Users size={28} />
-                </div>
-                <div className="ph-stat-content">
-                  <h3>Students</h3>
-                  <p className="ph-stat-value">{adminStats.studentCount}</p>
-                  <span className="ph-stat-label">Paying Students</span>
-                </div>
-              </div>
-              <div className="ph-stat-card">
-                <div className="ph-stat-icon ph-stat-icon-average">
-                  <TrendingUp size={28} />
-                </div>
-                <div className="ph-stat-content">
-                  <h3>Average Payment</h3>
-                  <p className="ph-stat-value">
-                    {formatCurrency(adminStats.totalCount > 0 ? adminStats.totalAmount / adminStats.totalCount : 0)}
-                  </p>
-                  <span className="ph-stat-label">Per Transaction</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Payment Breakdown */}
-            <div className="ph-breakdown-grid">
-              <div className="ph-breakdown-card">
-                <h3>Payment by Type</h3>
-                <div className="ph-breakdown-list">
-                  {Object.entries(adminStats.paymentsByType).map(([type, amount]) => (
-                    <div key={type} className="ph-breakdown-item">
-                      <span className="ph-breakdown-label">{type}</span>
-                      <span className="ph-breakdown-value">{formatCurrency(amount)}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <div className="ph-breakdown-card">
-                <h3>Payment by Method</h3>
-                <div className="ph-breakdown-list">
-                  {Object.entries(adminStats.paymentsByMethod).map(([method, amount]) => (
-                    <div key={method} className="ph-breakdown-item">
-                      <span className="ph-breakdown-label">{method}</span>
-                      <span className="ph-breakdown-value">{formatCurrency(amount)}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
           </div>
         )}
 
@@ -388,10 +404,9 @@ This is an official receipt from SCSA
                 <div className="ph-filter-group">
                   <label>Section</label>
                   <select name="section" value={filters.section} onChange={handleFilterChange}>
-                    <option value="">Select Section</option>
+                    <option value="">All Sections</option>
                     <option value="Virgen Del Rosario">Virgen Del Rosario</option>
                     <option value="Virgen Del Pilar">Virgen Del Pilar</option>
-                    <option value="Virgen Del Carmen">Virgen Del Carmen</option>
                     <option value="Virgen Del Carmen">Virgen Del Carmen</option>
                   </select>
                 </div>
@@ -432,6 +447,15 @@ This is an official receipt from SCSA
                 placeholder="e.g., 2024-2025"
               />
             </div>
+
+            <div className="ph-filter-group">
+              <label>Payment Status</label>
+              <select name="status" value={filters.status} onChange={handleFilterChange}>
+                <option value="">All Status</option>
+                <option value="Paid">Paid</option>
+                <option value="Partially Paid">Partially Paid</option>
+              </select>
+            </div>
           </div>
         </div>
 
@@ -441,75 +465,138 @@ This is an official receipt from SCSA
             <h2>
               Payment Records
               <span className="ph-count">
-                ({filteredPayments.length} {filteredPayments.length === 1 ? 'payment' : 'payments'})
+                ({safeFilteredPayments.length} {safeFilteredPayments.length === 1 ? 'payment' : 'payments'})
               </span>
             </h2>
           </div>
 
           {loading ? (
             <div className="ph-loading">Loading payment history...</div>
-          ) : filteredPayments.length === 0 ? (
+          ) : safeFilteredPayments.length === 0 ? (
             <div className="ph-no-data">
               <Receipt size={48} />
               <p>No payment records found</p>
             </div>
           ) : (
-            <div className="ph-table-container">
-              <table className="ph-table">
-                <thead>
-                  <tr>
-                    <th>Receipt No.</th>
-                    {isAdmin && <th>LRN</th>}
-                    {isAdmin && <th>Student Name</th>}
-                    {isAdmin && <th>Grade & Section</th>}
-                    <th>Payment Type</th>
-                    <th>Description</th>
-                    <th>Amount</th>
-                    <th>Payment Method</th>
-                    <th>Payment Date</th>
-                    <th>School Year</th>
-                    <th>Processed By</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredPayments.map((payment) => (
-                    <tr key={payment._id}>
-                      <td className="ph-receipt-no">{payment.receipt_number}</td>
-                      {isAdmin && <td>{payment.LRN?.LRN || payment.LRN}</td>}
-                      {isAdmin && (
-                        <td>
-                          {payment.LRN?.firstname} {payment.LRN?.middlename} {payment.LRN?.lastname}
-                        </td>
-                      )}
-                      {isAdmin && (
-                        <td>
-                          {payment.LRN?.gradelevel} - {payment.LRN?.section}
-                        </td>
-                      )}
-                      <td>{payment.payment_type}</td>
-                      <td>{payment.description}</td>
-                      <td className="ph-amount">{formatCurrency(payment.amount)}</td>
-                      <td>{payment.payment_method}</td>
-                      <td>{formatDate(payment.payment_date)}</td>
-                      <td>{payment.school_year}</td>
-                      <td>{payment.processed_by}</td>
-                      <td>
-                        <div className="ph-action-buttons">
-                          <button
-                            className="ph-action-btn ph-action-btn-download"
-                            onClick={() => handleDownloadReceipt(payment)}
-                            title="Download Receipt"
-                          >
-                            <Download size={16} />
-                          </button>
-                        </div>
-                      </td>
+            <>
+              <div className="ph-table-container">
+                <table className="ph-table">
+                  <thead>
+                    <tr>
+                      <th>Receipt No.</th>
+                      {isAdmin && <th>LRN</th>}
+                      {isAdmin && <th>Student Name</th>}
+                      {isAdmin && <th>Grade & Section</th>}
+                      <th>Payment Type</th>
+                      <th>Description</th>
+                      <th>Amount Paid</th>
+                      <th>Balance After</th>
+                      <th>Status</th>
+                      <th>Payment Method</th>
+                      <th>Payment Date</th>
+                      <th>School Year</th>
+                      <th>Actions</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {currentPayments.map((payment) => (
+                      <tr key={payment._id}>
+                        <td className="ph-receipt-no">{payment.receipt_number}</td>
+                        {isAdmin && <td>{payment.LRN?.LRN || payment.LRN}</td>}
+                        {isAdmin && (
+                          <td>
+                            {payment.LRN?.firstname} {payment.LRN?.middlename} {payment.LRN?.lastname}
+                          </td>
+                        )}
+                        {isAdmin && (
+                          <td>
+                            {payment.LRN?.gradelevel} - {payment.LRN?.section}
+                          </td>
+                        )}
+                        <td>{payment.payment_type}</td>
+                        <td>{payment.description}</td>
+                        <td className="ph-amount">{formatCurrency(payment.amount)}</td>
+                        <td className="ph-balance">
+                          {payment.balance_after_payment !== undefined 
+                            ? formatCurrency(payment.balance_after_payment) 
+                            : '-'}
+                        </td>
+                        <td>
+                          <span className={`ph-status-badge ph-status-${payment.status_after_payment?.toLowerCase().replace(' ', '-')}`}>
+                            {payment.status_after_payment}
+                          </span>
+                        </td>
+                        <td>{payment.payment_method}</td>
+                        <td>{formatDate(payment.payment_date)}</td>
+                        <td>{payment.school_year}</td>
+                        <td>
+                          <div className="ph-action-buttons">
+                            <button
+                              className="ph-action-btn ph-action-btn-download"
+                              onClick={() => handleDownloadReceipt(payment)}
+                              title="Download Receipt"
+                            >
+                              <Download size={16} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="ph-pagination">
+                  <button 
+                    className="ph-pagination-btn"
+                    onClick={goToPreviousPage}
+                    disabled={currentPage === 1}
+                  >
+                    <ChevronLeft size={20} />
+                    Previous
+                  </button>
+                  
+                  <div className="ph-pagination-pages">
+                    {[...Array(totalPages)].map((_, index) => {
+                      const pageNumber = index + 1;
+                      // Show first page, last page, current page, and pages around current
+                      if (
+                        pageNumber === 1 ||
+                        pageNumber === totalPages ||
+                        (pageNumber >= currentPage - 1 && pageNumber <= currentPage + 1)
+                      ) {
+                        return (
+                          <button
+                            key={pageNumber}
+                            className={`ph-pagination-page ${currentPage === pageNumber ? 'active' : ''}`}
+                            onClick={() => goToPage(pageNumber)}
+                          >
+                            {pageNumber}
+                          </button>
+                        );
+                      } else if (
+                        pageNumber === currentPage - 2 ||
+                        pageNumber === currentPage + 2
+                      ) {
+                        return <span key={pageNumber} className="ph-pagination-ellipsis">...</span>;
+                      }
+                      return null;
+                    })}
+                  </div>
+
+                  <button 
+                    className="ph-pagination-btn"
+                    onClick={goToNextPage}
+                    disabled={currentPage === totalPages}
+                  >
+                    Next
+                    <ChevronRight size={20} />
+                  </button>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>
