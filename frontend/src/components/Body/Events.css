@@ -2,7 +2,7 @@
 
 .wrapper {
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: radial-gradient(circle, #a1c4fd 0%, #3b82f6 100%);
   padding: 1.5rem 1rem;
 }
 
