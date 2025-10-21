@@ -10,7 +10,7 @@ const router = express.Router();
 // Get all catalog items
 router.get('/catalog', async (req, res) => {
   try {
-    const { item_type, school_year, grade_level, strand, section } = req.query;
+    const { item_type, school_year, grade_level, strand } = req.query;
     
     let filter = { is_active: true };
     
@@ -18,7 +18,6 @@ router.get('/catalog', async (req, res) => {
     if (school_year) filter.school_year = school_year;
     if (grade_level) filter.grade_level = { $in: [grade_level, 'Both', ''] };
     if (strand) filter.strand = { $in: [strand, 'All', ''] };
-    if (section) filter.section = { $in: [section, 'All', ''] };
 
     const items = await Catalog.find(filter).sort({ item_name: 1 });
     res.json(items);

@@ -48,7 +48,6 @@ const AdminView = ({ user }) => {
     price: '',
     grade_level: '',
     strand: '',
-    section: '',
     school_year: '2024-2025'
   });
 
@@ -168,7 +167,6 @@ const AdminView = ({ user }) => {
       price: '',
       grade_level: '',
       strand: '',
-      section: '',
       school_year: '2024-2025'
     });
     setCurrentItem(null);
@@ -184,7 +182,6 @@ const AdminView = ({ user }) => {
         price: item.price,
         grade_level: item.grade_level || '',
         strand: item.strand || '',
-        section: item.section || '',
         school_year: item.school_year
       });
     } else {
@@ -513,20 +510,6 @@ const AdminView = ({ user }) => {
                           </select>
                         </div>
                       </div>
-
-                      <div className="ub-form-group">
-                        <label>Section</label>
-                        <select
-                          value={catalogForm.section}
-                          onChange={(e) => setCatalogForm({...catalogForm, section: e.target.value})}
-                        >
-                          <option value="">All Sections</option>
-                          <option value="Virgen Del Rosario">Virgen Del Rosario</option>
-                          <option value="Virgen Del Pilar">Virgen Del Pilar</option>
-                          <option value="Virgen Del Carmen">Virgen Del Carmen</option>
-                          <option value="All">All</option>
-                        </select>
-                      </div>
                     </>
                   )}
 
@@ -700,13 +683,16 @@ const StudentView = ({ user }) => {
 
   const addToCart = (item, quantity = 1) => {
     const existingIndex = cart.findIndex(i => i._id === item._id);
+    const bookQuantity = item.item_type === 'Book' ? 1 : quantity;
     
     if (existingIndex >= 0) {
-      const newCart = [...cart];
-      newCart[existingIndex].quantity += quantity;
-      setCart(newCart);
+      if (item.item_type !== 'Book') {
+        const newCart = [...cart];
+        newCart[existingIndex].quantity += quantity;
+        setCart(newCart);
+      }
     } else {
-      setCart([...cart, { ...item, quantity }]);
+      setCart([...cart, { ...item, quantity: bookQuantity }]);
     }
     
     setSuccess(`${item.item_name} added to cart`);
@@ -743,14 +729,15 @@ const StudentView = ({ user }) => {
       item.item_type === 'Book' && selectedBooks.has(item.item_name)
     );
     
-    booksToAdd.forEach(book => {
-      if (!cart.find(item => item._id === book._id)) {
-        addToCart(book, 1);
-      }
-    });
+    const newBooks = booksToAdd.filter(book => !cart.find(item => item._id === book._id));
+    
+    if (newBooks.length > 0) {
+      const updatedCart = [...cart, ...newBooks.map(book => ({ ...book, quantity: 1 }))];
+      setCart(updatedCart);
+    }
     
     setSelectedBooks(new Set());
-    setSuccess(`${booksToAdd.length} books added to cart`);
+    setSuccess(`${newBooks.length} books added to cart`);
     setTimeout(() => setSuccess(''), 2000);
   };
 
@@ -771,7 +758,6 @@ const StudentView = ({ user }) => {
           subtotal: item.price * item.quantity
         })),
         school_year: user.school_year,
-        amount_paid: parseFloat(amountPaid) || 0
       };
 
       await axios.post(`${API_URL}/uniforms-books`, orderData);
@@ -1057,13 +1043,19 @@ const StudentView = ({ user }) => {
                         </div>
                         <div className="ub-cart-item-controls">
                           <div className="ub-quantity-control">
-                            <button onClick={() => updateCartQuantity(item._id, -1)}>
-                              <Minus size={14} />
-                            </button>
-                            <span>{item.quantity}</span>
-                            <button onClick={() => updateCartQuantity(item._id, 1)}>
-                              <Plus size={14} />
-                            </button>
+                            {item.item_type === 'Book' ? (
+                              <span>{item.quantity}</span>
+                            ) : (
+                              <>
+                                <button onClick={() => updateCartQuantity(item._id, -1)}>
+                                  <Minus size={14} />
+                                </button>
+                                <span>{item.quantity}</span>
+                                <button onClick={() => updateCartQuantity(item._id, 1)}>
+                                  <Plus size={14} />
+                                </button>
+                              </>
+                            )}
                           </div>
                           <p className="ub-cart-item-total">{formatCurrency(item.price * item.quantity)}</p>
                           <button 
@@ -1120,23 +1112,14 @@ const StudentView = ({ user }) => {
                   <strong>Total Amount:</strong>
                   <strong>{formatCurrency(calculateTotal())}</strong>
                 </div>
+                <div className="ub-alert ub-alert-error">
+                  <AlertCircle size={18} />
+                  <span>Note: Only admins can delete orders. Make sure to double check before checking out items.</span>
+                </div>
                 <form onSubmit={(e) => {
                   e.preventDefault();
-                  const amountPaid = e.target.amount_paid.value;
-                  handleCheckout(amountPaid);
+                  handleCheckout();
                 }}>
-                  <div className="ub-form-group">
-                    <label>Payment Amount (Optional)</label>
-                    <input
-                      type="number"
-                      name="amount_paid"
-                      min="0"
-                      max={calculateTotal()}
-                      step="0.01"
-                      placeholder="Leave empty to pay later"
-                    />
-                    <small>You can pay the full amount now or leave it unpaid and pay later</small>
-                  </div>
                   <div className="ub-modal-actions">
                     <button 
                       type="button" 

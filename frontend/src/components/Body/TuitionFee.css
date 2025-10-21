@@ -398,6 +398,7 @@
   padding: 1.5rem;
   overflow-y: auto;
   flex: 1;
+  max-height: calc(90vh - 180px);
 }
 
 .tuition-form-group {

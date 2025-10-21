@@ -27,10 +27,6 @@ const catalogSchema = new mongoose.Schema({
     type: String,
     enum: ['STEM', 'ABM', 'HUMSS', 'All', '']
   },
-  section: {
-    type: String,
-    enum: ['Virgen Del Rosario', 'Virgen Del Pilar', 'Virgen Del Carmen', 'All', '']
-  },
   school_year: {
     type: String,
     required: true
