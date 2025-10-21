@@ -8,6 +8,7 @@ import { dirname } from 'path';
 
 import dashboardRouter from './router/dashboard.js';
 import authRouter from './router/auth.js';
+import studentsRouter from './router/students.js';
 import tuitionFeesRouter from './router/tuitionFees.js';
 import eventsRouter from './router/events.js';
 import uniformsBooksRouter from './router/uniformBooks.js';
@@ -31,6 +32,7 @@ app.use(express.json());
 // API Routes
 app.use('/dashboard', dashboardRouter);
 app.use('/auth', authRouter);
+app.use('/students', studentsRouter);
 app.use('/tuition-fees', tuitionFeesRouter);
 app.use('/events', eventsRouter);
 app.use('/uniforms-books', uniformsBooksRouter);
