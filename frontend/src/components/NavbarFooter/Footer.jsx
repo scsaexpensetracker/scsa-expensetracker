@@ -105,7 +105,7 @@ const Footer = () => {
               <p>SCSA's email contact has been copied to your clipboard. Would you like to proceed to Gmail?</p>
               <div className="modal-buttons">
                 <button className="modal-btn modal-btn-primary" onClick={handleProceedToGmail}>
-                  Open Gmail
+                  Open Gmail!
                 </button>
                 <button className="modal-btn modal-btn-secondary" onClick={handleCloseModal}>
                   Close
