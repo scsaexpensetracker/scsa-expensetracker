@@ -6,24 +6,34 @@ const uniformBookSchema = new mongoose.Schema({
     required: true,
     ref: 'User'
   },
-  item_type: {
-    type: String,
-    required: true,
-    enum: ['Uniform', 'Book', 'Laboratory Materials', 'Others']
-  },
-  item_name: {
-    type: String,
-    required: true
-  },
-  quantity: {
-    type: Number,
-    required: true,
-    default: 1
-  },
-  unit_price: {
-    type: Number,
-    required: true
-  },
+  items: [{
+    item_type: {
+      type: String,
+      required: true,
+      enum: ['Uniform', 'Book', 'Others']
+    },
+    item_name: {
+      type: String,
+      required: true
+    },
+    description: {
+      type: String,
+      default: ''
+    },
+    quantity: {
+      type: Number,
+      required: true,
+      default: 1
+    },
+    unit_price: {
+      type: Number,
+      required: true
+    },
+    subtotal: {
+      type: Number,
+      required: true
+    }
+  }],
   total_amount: {
     type: Number,
     required: true
