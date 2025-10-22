@@ -15,7 +15,7 @@ import './Notifications.css';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
-const Notifications = ({ user }) => {
+const Notifications = ({ user, onNotificationUpdate }) => {
   const [notifications, setNotifications] = useState([]);
   const [filteredNotifications, setFilteredNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -34,6 +34,11 @@ const Notifications = ({ user }) => {
 
   useEffect(() => {
     fetchNotifications();
+    
+    // Refresh notifications every 60 seconds
+    const interval = setInterval(fetchNotifications, 60000);
+    
+    return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
@@ -49,6 +54,12 @@ const Notifications = ({ user }) => {
       const response = await axios.get(url);
       setNotifications(response.data);
       setFilteredNotifications(response.data);
+      
+      // Notify parent component about notification update (for navbar badge)
+      if (onNotificationUpdate && !isAdmin) {
+        const unreadCount = response.data.filter(n => !n.isRead).length;
+        onNotificationUpdate(unreadCount);
+      }
     } catch (err) {
       setError('Failed to fetch notifications');
       console.error(err);
@@ -61,9 +72,10 @@ const Notifications = ({ user }) => {
     let filtered = [...notifications];
 
     if (filters.LRN && isAdmin) {
-      filtered = filtered.filter(n => 
-        (n.LRN?.LRN || n.LRN)?.toLowerCase().includes(filters.LRN.toLowerCase())
-      );
+      filtered = filtered.filter(n => {
+        const lrnValue = n.LRN?.LRN || n.LRN;
+        return lrnValue?.toLowerCase().includes(filters.LRN.toLowerCase());
+      });
     }
 
     if (filters.type) {
@@ -106,7 +118,7 @@ const Notifications = ({ user }) => {
   const handleMarkAsRead = async (notificationId) => {
     try {
       await axios.patch(`${API_URL}/notifications/${notificationId}/read`);
-      fetchNotifications();
+      await fetchNotifications();
     } catch (err) {
       setError('Failed to mark as read');
       setTimeout(() => setError(''), 3000);
@@ -117,7 +129,7 @@ const Notifications = ({ user }) => {
     try {
       await axios.patch(`${API_URL}/notifications/mark-all-read/${user.LRN}`);
       setSuccess('All notifications marked as read');
-      fetchNotifications();
+      await fetchNotifications();
       setTimeout(() => setSuccess(''), 3000);
     } catch (err) {
       setError('Failed to mark all as read');
@@ -168,14 +180,14 @@ const Notifications = ({ user }) => {
               </h1>
               <p>View and manage notifications and announcements</p>
             </div>
-            <div className="notif-header-actions">
-              {!isAdmin && unreadCount > 0 && (
+            {!isAdmin && unreadCount > 0 && (
+              <div className="notif-header-actions">
                 <button className="notif-mark-all-btn" onClick={handleMarkAllAsRead}>
                   <CheckCircle size={20} />
                   Mark All as Read ({unreadCount})
                 </button>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -306,9 +318,11 @@ const Notifications = ({ user }) => {
                           <span className="notif-type">{notification.type}</span>
                         </div>
                       </div>
-                      {isAdmin && (
+                      {isAdmin && notification.LRN && (
                         <div className="notif-item-student">
-                          <strong>Student:</strong> {notification.LRN?.firstname} {notification.LRN?.middlename} {notification.LRN?.lastname} ({notification.LRN?.LRN || notification.LRN})
+                          <strong>Student:</strong>{' '}
+                          {notification.LRN.firstname} {notification.LRN.middlename} {notification.LRN.lastname}{' '}
+                          ({notification.LRN.LRN || notification.LRN})
                         </div>
                       )}
                     </div>
@@ -319,8 +333,8 @@ const Notifications = ({ user }) => {
                       <span className="notif-item-year">{notification.school_year}</span>
                     </div>
                   </div>
-                  <div className="notif-item-actions">
-                    {!notification.isRead && !isAdmin && (
+                  {!notification.isRead && !isAdmin && (
+                    <div className="notif-item-actions">
                       <button
                         className="notif-action-btn notif-action-btn-read"
                         onClick={() => handleMarkAsRead(notification._id)}
@@ -328,8 +342,8 @@ const Notifications = ({ user }) => {
                       >
                         <CheckCircle size={16} />
                       </button>
-                    )}
-                  </div>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

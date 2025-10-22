@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Menu, X, User } from 'lucide-react';
+import axios from 'axios';
 import './Navbar.css';
 import SCSA_LOGO from '../SCSA/SCSA_Logo.jpg';
 
-const Navbar = ({ user, onLogout }) => {
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+
+const Navbar = ({ user, onLogout, unreadCount, onNotificationUpdate }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
 
@@ -15,6 +18,29 @@ const Navbar = ({ user, onLogout }) => {
 
     return () => clearInterval(timer);
   }, []);
+
+  // Fetch unread count for students
+  useEffect(() => {
+    if (user && user.LRN && user.role !== 'admin') {
+      fetchUnreadCount();
+      
+      // Refresh unread count every 30 seconds
+      const interval = setInterval(fetchUnreadCount, 30000);
+      
+      return () => clearInterval(interval);
+    }
+  }, [user]);
+
+  const fetchUnreadCount = async () => {
+    try {
+      const response = await axios.get(`${API_URL}/notifications/unread-count/${user.LRN}`);
+      if (onNotificationUpdate) {
+        onNotificationUpdate(response.data.count);
+      }
+    } catch (error) {
+      console.error('Error fetching unread count:', error);
+    }
+  };
 
   const formatTime = (date) => {
     return date.toLocaleTimeString('en-US', {
@@ -53,7 +79,7 @@ const Navbar = ({ user, onLogout }) => {
           { name: 'Events', path: '/events' },
           { name: 'Uniforms & Books', path: '/uniforms-books' },
           { name: 'Payment History', path: '/payment-history' },
-          { name: 'Notifications', path: '/notifications' },
+          { name: 'Notifications', path: '/notifications', badge: unreadCount },
         ]
       : [];
 
@@ -89,8 +115,11 @@ const Navbar = ({ user, onLogout }) => {
             {/* Desktop Navigation */}
             <div className="navbar-links-desktop">
               {navLinks.map((link) => (
-                <Link key={link.name} to={link.path}>
+                <Link key={link.name} to={link.path} className="navbar-link-wrapper">
                   {link.name}
+                  {link.badge > 0 && (
+                    <span className="navbar-notification-badge">{link.badge}</span>
+                  )}
                 </Link>
               ))}
               {user && (
@@ -120,8 +149,12 @@ const Navbar = ({ user, onLogout }) => {
                   key={link.name}
                   to={link.path}
                   onClick={() => setIsOpen(false)}
+                  className="navbar-mobile-link-wrapper"
                 >
                   {link.name}
+                  {link.badge > 0 && (
+                    <span className="navbar-notification-badge">{link.badge}</span>
+                  )}
                 </Link>
               ))}
               {user && (

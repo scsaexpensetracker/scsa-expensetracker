@@ -18,7 +18,12 @@ router.get('/', async (req, res) => {
     if (school_year) filter.school_year = school_year;
 
     const notifications = await Notification.find(filter)
-      .populate('LRN', 'firstname middlename lastname gradelevel section')
+      .populate({
+        path: 'LRN',
+        foreignField: 'LRN',
+        localField: 'LRN',
+        select: 'firstname middlename lastname gradelevel section'
+      })
       .sort({ createdAt: -1 });
     res.json(notifications);
   } catch (error) {

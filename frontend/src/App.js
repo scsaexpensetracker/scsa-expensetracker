@@ -15,6 +15,7 @@ import './App.css';
 
 function App() {
   const [currentUser, setCurrentUser] = useState(null);
+  const [notificationCount, setNotificationCount] = useState(0);
 
   const handleLogin = (userData) => {
     setCurrentUser(userData);
@@ -22,13 +23,25 @@ function App() {
 
   const handleLogout = () => {
     setCurrentUser(null);
+    setNotificationCount(0);
+  };
+
+  const handleNotificationUpdate = (count) => {
+    setNotificationCount(count);
   };
 
   return (
     <Router>
       <div className="app-container">
         {/* Render Navbar only if user is logged in */}
-        {currentUser && <Navbar user={currentUser} onLogout={handleLogout} />}
+        {currentUser && (
+          <Navbar 
+            user={currentUser} 
+            onLogout={handleLogout}
+            unreadCount={notificationCount}
+            onNotificationUpdate={handleNotificationUpdate}
+          />
+        )}
         <Routes>
           {/* Login Route */}
           <Route 
@@ -107,7 +120,10 @@ function App() {
             path="/notifications" 
             element={
               currentUser ? (
-                <Notifications user={currentUser} />
+                <Notifications 
+                  user={currentUser}
+                  onNotificationUpdate={handleNotificationUpdate}
+                />
               ) : (
                 <Navigate to="/" replace />
               )

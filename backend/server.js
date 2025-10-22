@@ -15,6 +15,7 @@ import uniformsBooksRouter from './router/uniformBooks.js';
 import notificationsRouter from './router/notifications.js';
 import paymentHistoryRouter from './router/paymentHistory.js';
 import User from './models/User.js';
+import scheduleNotificationJobs from './jobs/notif.js';
 
 dotenv.config();
 
@@ -72,6 +73,9 @@ mongoose.connect(mongoUri, {
       });
       console.log('✓ Default admin created (LRN: admin, Password: admin123)');
     }
+    // Initialize notification cron jobs
+    scheduleNotificationJobs();
+    console.log('✓ Notification cron jobs initialized');
   })
   .catch(err => {
     console.error('✗ MongoDB connection error:', err.message);
