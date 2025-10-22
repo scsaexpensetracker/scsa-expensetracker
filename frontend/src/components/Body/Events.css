@@ -622,7 +622,7 @@
   padding: 1.25rem 1.5rem;
   overflow-y: scroll;
   flex: 1;
-  max-height: calc(90vh - 180px);
+  max-height: calc(90vh - 250px);
 }
 
 .modal-actions {

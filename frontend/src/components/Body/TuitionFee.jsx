@@ -25,6 +25,7 @@ const TuitionFees = ({ user }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [maxEditAmount, setMaxEditAmount] = useState(0);
   const [filters, setFilters] = useState({
     LRN: '',
     status: '',
@@ -219,6 +220,16 @@ const TuitionFees = ({ user }) => {
 
   const handleEditPayment = (payment) => {
     setCurrentPayment(payment);
+    
+    // Calculate maximum allowed amount for this payment
+    // Find the previous payment's balance (or total_amount if this is the first payment)
+    const paymentIndex = currentFee.payment_history.findIndex(p => p._id === payment._id);
+    const previousBalance = paymentIndex === 0 
+      ? currentFee.total_amount 
+      : currentFee.payment_history[paymentIndex - 1].balance_after_payment;
+    
+    setMaxEditAmount(previousBalance);
+    
     setPaymentData({
       amount: payment.amount,
       payment_date: new Date(payment.payment_date).toISOString().split('T')[0],
@@ -236,14 +247,10 @@ const TuitionFees = ({ user }) => {
         `${API_URL}/tuition-fees/${currentFee._id}/payment/${currentPayment._id}`,
         paymentData
       );
-      setSuccess('Payment updated successfully');
+      alert('Update successful');
       fetchTuitionFees();
       setShowEditPaymentModal(false);
       setShowHistoryModal(false);
-      setTimeout(() => {
-        setSuccess('');
-        handleViewHistory(tuitionFees.find(f => f._id === currentFee._id));
-      }, 1000);
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to update payment');
       setTimeout(() => setError(''), 3000);
@@ -260,17 +267,10 @@ const TuitionFees = ({ user }) => {
       await axios.delete(
         `${API_URL}/tuition-fees/${currentFee._id}/payment/${paymentToDelete._id}`
       );
-      setSuccess('Payment deleted successfully');
+      alert('Delete successful');
       fetchTuitionFees();
       setShowDeletePaymentModal(false);
       setShowHistoryModal(false);
-      setTimeout(() => {
-        setSuccess('');
-        const updatedFee = tuitionFees.find(f => f._id === currentFee._id);
-        if (updatedFee) {
-          handleViewHistory(updatedFee);
-        }
-      }, 1000);
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to delete payment');
       setTimeout(() => setError(''), 3000);
@@ -864,9 +864,13 @@ const TuitionFees = ({ user }) => {
                       value={paymentData.amount}
                       onChange={handlePaymentInputChange}
                       min="0"
+                      max={maxEditAmount}
                       step="0.01"
                       required
                     />
+                    <small className="form-hint">
+                      Maximum: {formatCurrency(maxEditAmount)}
+                    </small>
                   </div>
 
                   <div className="tuition-form-group">
