@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Lock, User, AlertCircle } from 'lucide-react';
 import axios from 'axios';
 import './Login.css';
 import SCSA_LOGO from '../SCSA/SCSA_Logo.jpg';
 import SCSA_HS from '../SCSA/HS.JPG';
+import SCSA_Church from '../SCSA/Church.jpg';
+import SCSA_Grounds from '../SCSA/SCSA_Grounds.jpg';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
@@ -14,6 +16,19 @@ const Login = ({ onLogin }) => {
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
+  const backgroundImages = [SCSA_HS, SCSA_Church, SCSA_Grounds];
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentImageIndex((prevIndex) => 
+        (prevIndex + 1) % backgroundImages.length
+      );
+    }, 5000); // Change image every 5 seconds
+
+    return () => clearInterval(interval);
+  }, []);
 
   const handleChange = (e) => {
     setFormData({
@@ -43,7 +58,13 @@ const Login = ({ onLogin }) => {
 
   return (
     <div className="login-container">
-      <div className="login-background" style={{ backgroundImage: `url(${SCSA_HS})` }}></div>
+      {backgroundImages.map((image, index) => (
+        <div
+          key={index}
+          className={`login-background ${index === currentImageIndex ? 'active' : ''}`}
+          style={{ backgroundImage: `url(${image})` }}
+        ></div>
+      ))}
       
       <div className="login-content">
         <div className="login-card">
@@ -109,8 +130,8 @@ const Login = ({ onLogin }) => {
 
           {/* Footer */}
           <div className="login-footer">
-            <p>© 2024 St. Catherine of Siena Academy</p>
-            <p className="login-help">Need help? Contact the Finance Office</p>
+            <p>© 2025 St. Catherine of Siena Academy</p>
+            {/* <p className="login-help">Need help? Contact the Finance Office</p> */}
           </div>
         </div>
       </div>

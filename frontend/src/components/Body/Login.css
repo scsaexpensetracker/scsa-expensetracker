@@ -4,6 +4,7 @@
   align-items: center;
   justify-content: center;
   position: relative;
+  overflow: hidden;
 }
 
 .login-background {
@@ -13,7 +14,12 @@
   background-repeat: no-repeat;
   background-position: center;
   pointer-events: none;
-  /* Removed opacity to make the image fully visible */
+  opacity: 0;
+  transition: opacity 2s ease-in-out;
+}
+
+.login-background.active {
+  opacity: 1;
 }
 
 .login-content {
