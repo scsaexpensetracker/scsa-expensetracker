@@ -341,8 +341,8 @@ const TuitionFees = ({ user }) => {
         <div className="tuition-header">
           <div className="tuition-header-content">
             <div className="tuition-header-text">
-              <h1>
-                <DollarSign size={32} />
+              <h1 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ fontSize: '32px', lineHeight: '1' }}>₱</span>
                 Tuition Fees Management
               </h1>
               <p>Monitor and manage tuition fee records</p>

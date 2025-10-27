@@ -107,7 +107,7 @@ const Navbar = ({ user, onLogout, unreadCount, onNotificationUpdate }) => {
             <div className="navbar-logo">
               <img src={SCSA_LOGO} alt="SCSA Logo" className="navbar-logo-image" />
               <div className="navbar-title">
-                <h1>St. Catherine of Siena Academy</h1>
+                <h1>St. Catherine of Siena Academy of Samal, Inc.</h1>
                 <p className="navbar-subtitle">Samal, Bataan - Financial Management Portal</p>
               </div>
             </div>
