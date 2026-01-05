@@ -14,16 +14,24 @@ import PaymentHistory from './components/Body/PaymentHistory';
 import './App.css';
 
 function App() {
-  const [currentUser, setCurrentUser] = useState(null);
+  const [currentUser, setCurrentUser] = useState(() => {
+    // Load user from localStorage on initial load
+    const savedUser = localStorage.getItem('currentUser');
+    return savedUser ? JSON.parse(savedUser) : null;
+  });
   const [notificationCount, setNotificationCount] = useState(0);
 
   const handleLogin = (userData) => {
     setCurrentUser(userData);
+    // Save user to localStorage
+    localStorage.setItem('currentUser', JSON.stringify(userData));
   };
 
   const handleLogout = () => {
     setCurrentUser(null);
     setNotificationCount(0);
+    // Remove user from localStorage
+    localStorage.removeItem('currentUser');
   };
 
   const handleNotificationUpdate = (count) => {
