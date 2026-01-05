@@ -32,7 +32,7 @@ const recalculateBalances = (tuitionFee) => {
 };
 
 // Get all tuition fees with filters
-router.get('/', async (req, res) => {
+router.get('/all', async (req, res) => {
   try {
     const { LRN, status, school_year, semester } = req.query;
     

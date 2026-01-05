@@ -90,7 +90,7 @@ const TuitionFees = ({ user }) => {
     try {
       setLoading(true);
       const url = isAdmin 
-        ? `${API_URL}/tuition-fees` 
+        ? `${API_URL}/tuition-fees/all` 
         : `${API_URL}/tuition-fees/student/${user.LRN}`;
       const response = await axios.get(url);
       setTuitionFees(response.data);
