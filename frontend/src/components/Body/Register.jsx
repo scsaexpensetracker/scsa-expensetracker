@@ -6,12 +6,6 @@ import './Register.css';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
-const TUITION_FEES = {
-  'STEM': 25000,
-  'ABM': 22000,
-  'HUMSS': 20000
-};
-
 const SECTION_BY_STRAND = {
   'STEM': ['Virgen Del Rosario', 'Virgen Del Pilar'],
   'ABM': ['Virgen Del Carmen'],
@@ -37,6 +31,7 @@ const Register = ({ user }) => {
   const [tuitionDetails, setTuitionDetails] = useState({
     enabled: false,
     semester: '1st Semester',
+    total_amount: '',
     amount_paid: '',
     due_date: ''
   });
@@ -78,6 +73,7 @@ const Register = ({ user }) => {
       ...prev,
       enabled: !prev.enabled,
       semester: prev.enabled ? '1st Semester' : prev.semester,
+      total_amount: prev.enabled ? '' : prev.total_amount,
       amount_paid: prev.enabled ? '' : prev.amount_paid,
       due_date: prev.enabled ? '' : prev.due_date
     }));
@@ -89,7 +85,7 @@ const Register = ({ user }) => {
     setSuccess('');
     setLoading(true);
 
-    // Check if all fields are filled
+    // Check if all student fields are filled
     const emptyFields = Object.entries(formData).filter(([key, value]) => !value);
     if (emptyFields.length > 0) {
       setError('All fields are required');
@@ -99,6 +95,12 @@ const Register = ({ user }) => {
 
     // Validate tuition details if enabled
     if (tuitionDetails.enabled) {
+      if (!tuitionDetails.total_amount || parseFloat(tuitionDetails.total_amount) <= 0) {
+        setError('Please provide a valid total tuition amount');
+        setLoading(false);
+        return;
+      }
+
       if (!tuitionDetails.due_date) {
         setError('Please provide a due date for the tuition fee');
         setLoading(false);
@@ -112,7 +114,7 @@ const Register = ({ user }) => {
       }
       
       const amountPaid = parseFloat(tuitionDetails.amount_paid) || 0;
-      const totalAmount = TUITION_FEES[formData.strand];
+      const totalAmount = parseFloat(tuitionDetails.total_amount);
       
       if (amountPaid > totalAmount) {
         setError(`Amount paid cannot exceed the total tuition fee of ₱${totalAmount.toLocaleString()}`);
@@ -125,9 +127,9 @@ const Register = ({ user }) => {
       // Register the student
       const registerResponse = await axios.post(`${API_URL}/auth/register`, formData);
       
-      // Always create tuition fee record if tuition details are enabled
+      // Create tuition fee record if tuition details are enabled
       if (tuitionDetails.enabled) {
-        const totalAmount = TUITION_FEES[formData.strand];
+        const totalAmount = parseFloat(tuitionDetails.total_amount);
         const amountPaid = parseFloat(tuitionDetails.amount_paid) || 0;
         
         const tuitionData = {
@@ -162,6 +164,7 @@ const Register = ({ user }) => {
         setTuitionDetails({
           enabled: false,
           semester: '1st Semester',
+          total_amount: '',
           amount_paid: '',
           due_date: ''
         });
@@ -175,7 +178,9 @@ const Register = ({ user }) => {
   };
 
   const availableSections = formData.strand ? SECTION_BY_STRAND[formData.strand] : [];
-  const tuitionAmount = formData.strand ? TUITION_FEES[formData.strand] : 0;
+  const totalAmount = parseFloat(tuitionDetails.total_amount) || 0;
+  const amountPaid = parseFloat(tuitionDetails.amount_paid) || 0;
+  const balance = totalAmount - amountPaid;
 
   return (
     <div className="register-container">
@@ -381,16 +386,6 @@ const Register = ({ user }) => {
 
               {tuitionDetails.enabled && (
                 <div className="tuition-details-form">
-                  <div className="tuition-info-card">
-                    <DollarSign size={20} />
-                    <div>
-                      <p className="tuition-info-label">Tuition Fee for {formData.strand || 'Selected Strand'}</p>
-                      <p className="tuition-info-amount">
-                        ₱{tuitionAmount.toLocaleString()}
-                      </p>
-                    </div>
-                  </div>
-
                   <div className="form-row">
                     <div className="form-group">
                       <label htmlFor="semester">Semester *</label>
@@ -421,6 +416,26 @@ const Register = ({ user }) => {
 
                   <div className="form-row">
                     <div className="form-group full-width">
+                      <label htmlFor="total_amount">Total Tuition Amount *</label>
+                      <input
+                        type="number"
+                        id="total_amount"
+                        name="total_amount"
+                        value={tuitionDetails.total_amount}
+                        onChange={handleTuitionChange}
+                        placeholder="Enter total tuition amount"
+                        min="0"
+                        step="0.01"
+                        required
+                      />
+                      <small className="form-hint">
+                        Enter the total tuition fee amount for this semester
+                      </small>
+                    </div>
+                  </div>
+
+                  <div className="form-row">
+                    <div className="form-group full-width">
                       <label htmlFor="amount_paid">Initial Payment Amount</label>
                       <input
                         type="number"
@@ -430,28 +445,41 @@ const Register = ({ user }) => {
                         onChange={handleTuitionChange}
                         placeholder="Enter amount to pay (leave empty for unpaid)"
                         min="0"
-                        max={tuitionAmount}
+                        max={totalAmount}
                         step="0.01"
                       />
                       <small className="form-hint">
-                        Leave empty to create an unpaid tuition record. Maximum: ₱{tuitionAmount.toLocaleString()}
+                        Leave empty to create an unpaid tuition record
+                        {totalAmount > 0 && `. Maximum: ₱${totalAmount.toLocaleString()}`}
                       </small>
                     </div>
                   </div>
 
-                  {tuitionDetails.amount_paid && (
+                  {totalAmount > 0 && (
+                    <div className="tuition-info-card">
+                      <DollarSign size={20} />
+                      <div>
+                        <p className="tuition-info-label">Total Tuition Fee</p>
+                        <p className="tuition-info-amount">
+                          ₱{totalAmount.toLocaleString()}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {tuitionDetails.amount_paid && totalAmount > 0 && (
                     <div className="tuition-summary">
                       <div className="tuition-summary-row">
                         <span>Total Tuition:</span>
-                        <span>₱{tuitionAmount.toLocaleString()}</span>
+                        <span>₱{totalAmount.toLocaleString()}</span>
                       </div>
                       <div className="tuition-summary-row">
                         <span>Initial Payment:</span>
-                        <span>₱{parseFloat(tuitionDetails.amount_paid || 0).toLocaleString()}</span>
+                        <span>₱{amountPaid.toLocaleString()}</span>
                       </div>
                       <div className="tuition-summary-row tuition-summary-balance">
                         <span>Balance:</span>
-                        <span>₱{(tuitionAmount - parseFloat(tuitionDetails.amount_paid || 0)).toLocaleString()}</span>
+                        <span>₱{balance.toLocaleString()}</span>
                       </div>
                     </div>
                   )}
