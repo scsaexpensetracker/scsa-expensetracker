@@ -63,26 +63,14 @@ const TuitionFees = ({ user }) => {
   const isAdmin = user.role === 'admin';
 
   useEffect(() => {
-    // Only fetch if user is authenticated
-    if (user && user.LRN) {
-      fetchTuitionFees();
-    }
-  }, [user]);
+    fetchTuitionFees();
+  }, []);
 
   useEffect(() => {
-    // Only apply filters if we have data and user is authenticated
-    if (user && user.LRN) {
-      applyFilters();
-    }
-  }, [tuitionFees, filters, user]);
+    applyFilters();
+  }, [tuitionFees, filters]);
 
   const fetchTuitionFees = async () => {
-    // Guard: Don't fetch if user is not authenticated
-    if (!user || !user.LRN) {
-      setLoading(false);
-      return;
-    }
-
     try {
       setLoading(true);
       const url = isAdmin 

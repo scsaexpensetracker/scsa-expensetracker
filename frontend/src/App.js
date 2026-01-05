@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import Navbar from './components/NavbarFooter/Navbar';
 import Footer from './components/NavbarFooter/Footer';
 import Login from './components/Body/Login';
@@ -13,13 +13,50 @@ import Notifications from './components/Body/Notifications';
 import PaymentHistory from './components/Body/PaymentHistory';
 import './App.css';
 
+// Protected Route Component
+const ProtectedRoute = ({ children, currentUser, requiredRole }) => {
+  const location = useLocation();
+  
+  if (!currentUser) {
+    // Redirect to login if not authenticated
+    return <Navigate to="/" state={{ from: location }} replace />;
+  }
+  
+  if (requiredRole && currentUser.role !== requiredRole) {
+    // Redirect to appropriate dashboard if wrong role
+    return <Navigate to={currentUser.role === 'admin' ? '/admin-dashboard' : '/dashboard'} replace />;
+  }
+  
+  return children;
+};
+
 function App() {
   const [currentUser, setCurrentUser] = useState(() => {
     // Load user from localStorage on initial load
-    const savedUser = localStorage.getItem('currentUser');
-    return savedUser ? JSON.parse(savedUser) : null;
+    try {
+      const savedUser = localStorage.getItem('currentUser');
+      if (savedUser) {
+        const user = JSON.parse(savedUser);
+        // Validate that the user object has required properties
+        if (user && user.LRN && user.role) {
+          return user;
+        }
+      }
+    } catch (error) {
+      console.error('Error loading user from localStorage:', error);
+      localStorage.removeItem('currentUser');
+    }
+    return null;
   });
+  
   const [notificationCount, setNotificationCount] = useState(0);
+
+  // Clear invalid localStorage data on mount
+  useEffect(() => {
+    if (!currentUser) {
+      localStorage.removeItem('currentUser');
+    }
+  }, [currentUser]);
 
   const handleLogin = (userData) => {
     setCurrentUser(userData);
@@ -67,11 +104,9 @@ function App() {
           <Route 
             path="/dashboard" 
             element={
-              currentUser && currentUser.role === 'student' ? (
+              <ProtectedRoute currentUser={currentUser} requiredRole="student">
                 <Dashboard user={currentUser} onLogout={handleLogout} />
-              ) : (
-                <Navigate to="/" replace />
-              )
+              </ProtectedRoute>
             } 
           />
 
@@ -79,11 +114,9 @@ function App() {
           <Route 
             path="/admin-dashboard" 
             element={
-              currentUser && currentUser.role === 'admin' ? (
+              <ProtectedRoute currentUser={currentUser} requiredRole="admin">
                 <AdminDashboard user={currentUser} onLogout={handleLogout} />
-              ) : (
-                <Navigate to="/" replace />
-              )
+              </ProtectedRoute>
             } 
           />
 
@@ -91,11 +124,9 @@ function App() {
           <Route 
             path="/tuition-fees" 
             element={
-              currentUser ? (
+              <ProtectedRoute currentUser={currentUser}>
                 <TuitionFees user={currentUser} />
-              ) : (
-                <Navigate to="/" replace />
-              )
+              </ProtectedRoute>
             } 
           />
 
@@ -103,11 +134,9 @@ function App() {
           <Route 
             path="/events" 
             element={
-              currentUser ? (
+              <ProtectedRoute currentUser={currentUser}>
                 <Events user={currentUser} />
-              ) : (
-                <Navigate to="/" replace />
-              )
+              </ProtectedRoute>
             } 
           />
 
@@ -115,11 +144,9 @@ function App() {
           <Route 
             path="/uniforms-books" 
             element={
-              currentUser ? (
+              <ProtectedRoute currentUser={currentUser}>
                 <UniformsBooks user={currentUser} />
-              ) : (
-                <Navigate to="/" replace />
-              )
+              </ProtectedRoute>
             } 
           />
 
@@ -127,14 +154,12 @@ function App() {
           <Route 
             path="/notifications" 
             element={
-              currentUser ? (
+              <ProtectedRoute currentUser={currentUser}>
                 <Notifications 
                   user={currentUser}
                   onNotificationUpdate={handleNotificationUpdate}
                 />
-              ) : (
-                <Navigate to="/" replace />
-              )
+              </ProtectedRoute>
             } 
           />
 
@@ -142,11 +167,9 @@ function App() {
           <Route 
             path="/payment-history" 
             element={
-              currentUser ? (
+              <ProtectedRoute currentUser={currentUser}>
                 <PaymentHistory user={currentUser} />
-              ) : (
-                <Navigate to="/" replace />
-              )
+              </ProtectedRoute>
             } 
           />
 
@@ -154,11 +177,9 @@ function App() {
           <Route 
             path="/register" 
             element={
-              currentUser && currentUser.role === 'admin' ? (
+              <ProtectedRoute currentUser={currentUser} requiredRole="admin">
                 <Register user={currentUser} />
-              ) : (
-                <Navigate to="/" replace />
-              )
+              </ProtectedRoute>
             } 
           />
 
