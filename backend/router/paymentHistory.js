@@ -164,7 +164,7 @@ const aggregatePayments = async (lrn = null) => {
 };
 
 // Get all payment history (Admin only)
-router.get('/', async (req, res) => {
+router.get('/payments', async (req, res) => {
   try {
     const payments = await aggregatePayments();
     res.json(payments);

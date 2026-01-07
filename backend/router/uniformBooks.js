@@ -82,7 +82,7 @@ router.delete('/catalog/:id', async (req, res) => {
 
 // ========== PURCHASE ORDERS ROUTES ==========
 
-router.get('/', async (req, res) => {
+router.get('/orders', async (req, res) => {
   try {
     const { LRN, status, school_year } = req.query;
     let filter = {};

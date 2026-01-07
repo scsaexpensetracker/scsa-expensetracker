@@ -48,7 +48,7 @@ const PaymentHistory = ({ user }) => {
     try {
       setLoading(true);
       const url = isAdmin 
-        ? `${API_URL}/payment-history` 
+        ? `${API_URL}/payment-history/payments` 
         : `${API_URL}/payment-history/student/${user.LRN}`;
       const response = await axios.get(url);
       

@@ -49,7 +49,7 @@ const Notifications = ({ user, onNotificationUpdate }) => {
     try {
       setLoading(true);
       const url = isAdmin 
-        ? `${API_URL}/notifications` 
+        ? `${API_URL}/notifications/notifs` 
         : `${API_URL}/notifications/student/${user.LRN}`;
       const response = await axios.get(url);
       setNotifications(response.data);

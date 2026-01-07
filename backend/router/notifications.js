@@ -5,7 +5,7 @@ import User from '../models/User.js';
 const router = express.Router();
 
 // Get all notifications with filters
-router.get('/', async (req, res) => {
+router.get('/notifs', async (req, res) => {
   try {
     const { LRN, type, isRead, priority, school_year } = req.query;
     

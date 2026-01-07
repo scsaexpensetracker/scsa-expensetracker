@@ -5,7 +5,7 @@ import User from '../models/User.js';
 const router = express.Router();
 
 // Get all events (Admin)
-router.get('/', async (req, res) => {
+router.get('/all', async (req, res) => {
   try {
     const { status, event_type } = req.query;
     

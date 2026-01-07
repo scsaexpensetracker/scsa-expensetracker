@@ -85,7 +85,7 @@ const AdminView = ({ user }) => {
       if (orderFilters.status) params.append('status', orderFilters.status);
       if (orderFilters.school_year) params.append('school_year', orderFilters.school_year);
       
-      const response = await axios.get(`${API_URL}/uniforms-books?${params}`);
+      const response = await axios.get(`${API_URL}/uniforms-books/orders?${params}`);
       setOrders(response.data);
     } catch (err) {
       setError('Failed to fetch orders');

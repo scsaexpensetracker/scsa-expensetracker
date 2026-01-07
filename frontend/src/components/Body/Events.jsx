@@ -81,7 +81,7 @@ const Events = ({ user }) => {
     try {
       setLoading(true);
       const url = isAdmin 
-        ? `${API_URL}/events` 
+        ? `${API_URL}/events/all` 
         : `${API_URL}/events/student/${user.LRN}`;
       const response = await fetch(url);
       
